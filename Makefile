@@ -3,7 +3,7 @@ CFLAGS=-c -Wall
 LDFLAGS= -lX11
 SOURCES=main.cpp gcontext.cpp x11context.cpp Shape.cpp Point.cpp matrix.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=shapes
+EXECUTABLE=image
 
 all: $(SOURCES) $(EXECUTABLE) 
 

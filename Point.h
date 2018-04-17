@@ -3,7 +3,7 @@
 
 #include "Shape.h"
 
-class Point : Shape {
+class Point : public Shape {
 	
 public:
 	
@@ -40,3 +40,5 @@ public:
 	// It's the responsibility of the caller to delete!
 	virtual Shape* clone() const;
 };
+
+#endif
