@@ -64,7 +64,7 @@ void Line::out(std::ostream & os) const
 	Shape::out(os);
 	
 	// compute the string for a new line, spaceLevel accounts for if previous level was tabbed
-	std::string lineTab(sizeof("p(color=0xFFFFFF ")-1 + this->spaceLevel, ' ');
+	std::string lineTab(sizeof("s(color=0xFFFFFF ")-1 + this->spaceLevel, ' ');
 
 	// output endpoint
 	os << std::endl << lineTab << "p2=[";

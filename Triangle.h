@@ -1,43 +1,44 @@
 // @Author Mohammed Alzakariya
-// This is a header file for the Line subclass of the Shape abstract class
+// This is a header file for the Triangle subclass of the Shape abstract class
 // It also contains global overloads of operator<< and operator>> for the class
 
-#ifndef LINE_H
-#define LINE_H
+#ifndef TRIANGLE_H
+#define TRIANGLE_H
 
 #include "Shape.h"
 
-class Line : public Shape {
+class Triangle : public Shape {
 	
 public:
 	
-	// A line contains two points: a startpoint and endpoint.
-	// @param pts 3x2 matrix consisting of a startpoint column and an endpoint column of [x y z]'
+	// A Triangle contains three vertices.
+	// @param pts 3x3 matrix consisting of a 3 column vectors of [x y z]'
 	// @param color RGB representation of the color of the shape, each color is a byte.	
-	// @throws matrixException if the matrix is not 3x2 (or bigger)
-	Line(const matrix &pts, int color);
+	// @throws matrixException if the matrix is not 3x3 (or bigger)
+	Triangle(const matrix &pts, int color);
 	
 	// Copy constructor for the Triangle class
 	// It builds on top of the copy constructor of the shape class
-	Line(const Line &s);
+	Triangle(const Triangle &s);
 
 	// This won't do anything, because the object contains Plain old data (POD).
 	// The default destructing will suffice.
-	virtual ~Line();
+	virtual ~Triangle();
 
 	// assignment operator. Makes sure to build on the Shape's assignment
 	// operator.
-	Line& operator=(const Line& rhs);
+	Triangle& operator=(const Triangle& rhs);
 	
 	// This sets the GraphicsContext color to the shape's color 
-	// and draws a line from p1 to p2 using the passed GraphicsContext pointer
+	// and draws the triangle by drawing 3 segments using the GraphicsContext pointer
 	virtual void draw(GraphicsContext* gs) const;
 
 	// This implementation extends on the output of the Shape class by specifying the shape type,
 	// and simply closing the parenthesis to signify the end of the output report.
 	// Output Format: 
 	// "p(color=<RGB_int> p1=[<x1> <y1> <z1>]' 
-	//                    p2=[<x2> <y2> <z2>]')"
+	//                    p2=[<x2> <y2> <z2>]'
+	//					  p3=[<x3> <y3> <z3>]')"
 	// @param os The output stream to insert into to
 	virtual void out(std::ostream & os) const;
 	
@@ -45,7 +46,8 @@ public:
 	// This should be overriden by derived classes to parse any additional data.
 	// Input Format:
 	// "p(color=<RGB_int> p1=[<x1> <y1> <z1>]' 
-	//                    p2=[<x2> <y2> <z2>]')"
+	//                    p2=[<x2> <y2> <z2>]'
+	//					  p3=[<x3> <y3> <z3>]')"
 	// @param is The input stream to parse from
 	virtual void in(std::istream & is);
 
@@ -57,18 +59,18 @@ public:
 };
 
 // global overloading of the stream insertion operator for the class
-// utilizes Line::out to generate the output
+// utilizes Triangle::out to generate the output
 // @param os output stream to the left of the << operator
-// @param o  Line shape object to insert the output of into os
+// @param o  Triangle shape object to insert the output of into os
 // @return os to allow for chaining 
-std::ostream& operator<<(std::ostream &os, const Line &o);
+std::ostream& operator<<(std::ostream &os, const Triangle &o);
 
 // global overloading of the stream extraction operator for the class
-// utilizes Line::in to generate the input
+// utilizes Triangle::in to generate the input
 // @param is input stream to the left of the >> operator
-// @param o  Line shape object to parse into
+// @param o  Triangle shape object to parse into
 // @return is to allow for chaining
-std::istream& operator>>(std::istream &is, Line &o);
+std::istream& operator>>(std::istream &is, Triangle &o);
 
 
 #endif

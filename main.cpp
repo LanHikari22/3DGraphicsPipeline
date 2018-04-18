@@ -1,6 +1,7 @@
 #include "x11context.h"
 #include "Point.h"
 #include "Line.h"
+#include "Triangle.h"
 #include "matrix.h"
 #include <unistd.h>
 #include <iostream>
@@ -10,6 +11,7 @@
 static void waitEnter();
 static void testPoint(GraphicsContext *gc);
 static void testLine(GraphicsContext *gc);
+static void testTriangle(GraphicsContext *gc);
 
 int main(void)
 {
@@ -18,6 +20,7 @@ int main(void)
 	// Test Shapes
 	testPoint(gc);
 	testLine(gc);
+	testTriangle(gc);
 	
     // Exit when pressing enter
 	waitEnter();
@@ -135,6 +138,76 @@ static void testLine(GraphicsContext *gc)
 	s0->draw(gc);
 	bool success = gc->getPixel(222, 222) == GraphicsContext::BLUE
 			&& gc->getPixel(0,0) == GraphicsContext::BLUE;
+	if (success)
+		std::cout << " OK!" << std::endl;
+	else
+		std::cout << " FAILED!" << std::endl;
+	delete s0;
+	
+	// Testing Clone
+	std::cout << "  Testing Clone..." << std::endl;
+	s0 = s1.clone();
+	std::cout << "    Expected output: " << s1 << std::endl;
+	std::cout << "    Actual output:   " << *s0 << std::endl;
+	delete s0;
+}
+
+static void testTriangle(GraphicsContext *gc)
+{
+	std::cout << "Testing Triangle..." << std::endl;
+	
+	std::cout << "  Allocating Triangle(pts,color) on the heap..." << std::endl;
+	matrix pts(3,3);
+	pts[0][0] = 500;	pts[0][1] = 250;	pts[0][2] = 0;
+	pts[1][0] = 500;	pts[1][1] = 250;	pts[1][2] = 0;
+	pts[2][0] = 0;		pts[2][0] = 0;		pts[2][2] = 0;
+	Shape *s0 = new Triangle(pts, GraphicsContext::RED);
+	
+	// Set space level for prompt text of "    Actual output:   " for nice printing
+	const unsigned int SPACE_LEVEL = sizeof("    Actual output:   ")-1;
+	s0->setSpaceLevel(SPACE_LEVEL);
+	
+	// Testing Operator<<
+	std::cout << "  Testing Operator<<..." << std::endl;
+	std::cout << "    Expected output: t(color=0xFF0000 p1=[500 500 0 1]'" << std::endl;
+	std::cout << "                                      p2=[250 250 0 1]'" << std::endl;
+	std::cout << "                                      p3=[0 0 0 1]')" << std::endl;
+	std::cout << "    Actual output:   " << *s0 << std::endl;
+	
+	// Testing Operator>>
+	std::cout << "  Testing Operator>>..." << std::endl;
+	std::string inStr("l(color=0x00FFFF p1=[0 1 2 3.3]'\n");
+	inStr += std::string(SPACE_LEVEL, ' ') + "                 p2=[4 5 6 7.7]'\n";
+	inStr += std::string(SPACE_LEVEL, ' ') + "                 p3=[8 9 10 11]')";
+	std::stringstream ss(inStr);
+	ss >> *s0;
+	std::cout << "    Expected output: " << inStr << std::endl;
+	std::cout << "    Actual output:   " << *s0 << std::endl;
+	
+	// Testing Copy Constructor
+	std::cout << "  Testing Copy Constructor..." << std::endl;
+	Triangle s1(*((Triangle*)s0));
+	std::cout << "    Expected output: " << *s0 << std::endl;
+	std::cout << "    Actual output:   " << s1 << std::endl;
+	
+	// Testing Operator=
+	std::cout << "  Testing Operator=..." << std::endl;
+	pts[0][0] = 200;	pts[0][1] = 222;		pts[0][2] = 500;
+	pts[1][0] = 599;	pts[1][1] = 333;		pts[1][2] = 234;
+	pts[2][0] = 0;		pts[2][0] = 0;			pts[2][2] = 0;
+	Triangle s3(pts,GraphicsContext::CYAN);
+	s3.setSpaceLevel(SPACE_LEVEL); // set first line startpad level
+	*s0 = s3;
+	std::cout << "    Expected output: " << s3 << std::endl;
+	std::cout << "    Actual output:   " << *s0 << std::endl;
+	
+	// Testing Draw
+	std::cout << "  Testing Draw...";
+	s0->draw(gc);
+	gc->getPixel(5000,5000);
+	bool success = gc->getPixel(pts[0][0], pts[1][0]) == GraphicsContext::CYAN
+			&& gc->getPixel(pts[0][1],pts[1][1]) == GraphicsContext::CYAN
+			&& gc->getPixel(pts[0][2],pts[1][2]) == GraphicsContext::CYAN;
 	if (success)
 		std::cout << " OK!" << std::endl;
 	else
