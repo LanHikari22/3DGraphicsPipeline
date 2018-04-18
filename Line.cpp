@@ -1,40 +1,59 @@
 // @author Mohammed Alzakariya
 // @file Point.cpp
-// Implementation cpp file for the Point concrete class and operator<</>> overloads
+// Implementation cpp file for the Line concrete class and operator<</>> overloads
 
-#include "Point.h"
+#include "Line.h"
 
-Point::Point(double x, double y, double z, int color)
-	: Shape(x,y,z,color)
-{ }
+Line(const Point &p1, const Point &p2, int color);
+	: color(color), pts(3,2), spaceLevel(0)
+{ 
+	for (int i=0 i<4; i++)
+	{
+		// first column: startpoint
+		this->pts[i][0] = startpoint.pts[i][0];
+		// second column: endpoint
+		this->pts[i][1] = endpoint.pts[i][0];
+	}		
+}
 
-Point::Point(const Point &s)
-	: Shape(s)
-{ }
+Line::Line(const Line &s)
+	: color(color), pts(3,2), spaceLevel(s.spaceLevel)
+{
+	this->pts = s.pts;
+}
 
-Point::~Point()
+Line::~Line()
 {
 	// does nothing, but must be defined
 }
 
-Point& Point::operator=(const Point& rhs)
-{	
+Line& operator=(const Line& rhs);
+{
+	// TODO: test
+	
 	// Shape data
 	this->color = rhs.color;
 	this->pts = rhs.pts;
+	this->spaceLevel = rhs.spaceLevel;
 	
 	return *this;
 }
 
 void Point::draw(GraphicsContext* gs) const
 {
-	// simply set the color and draw a pixel at the origin of the shape
+	// TODO: test
+
+	// set the color to the shape's
 	gs->setColor(this->color);
-	gs->setPixel(this->pts[0][0], this->pts[1][0]);
+	
+	// utilize line drawing algorithm in GraphicsContext
+	gs->drawLine(this->pts[0][0], this->pts[1][0], this->pts[0][1], this->pts[1][1]);
 }
 
 void Point::out(std::ostream & os) const
-{	
+{
+	// TODO: test
+	
 	// output shape specifier
 	os << "p(";
 	
@@ -47,8 +66,10 @@ void Point::out(std::ostream & os) const
 
 void Point::in(std::istream & is)
 {
+	// TODO: test
+
 	// ignore shape specifier, and parse the shape-specific data
-	is.ignore(sizeof("p(")-1);
+	is.ignore(sizeof("p")-1);
 	Shape::in(is);
 	
 	// Done! Ignore the last ')'. It's part of the format.
@@ -57,6 +78,7 @@ void Point::in(std::istream & is)
 
 Shape* Point::clone() const
 {
+	// TODO: test
 	Point *p = new Point(*this);
 	return p;
 }

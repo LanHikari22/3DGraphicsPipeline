@@ -1,23 +1,23 @@
 // @author Mohammed Alzakariya
 // @file Shape.cpp
-// Implementation cpp file for the Shape abstract class
+// Implementation cpp file for the Shape abstract class and operator<</>> overloads
 
 #include "Shape.h"
 #include <iomanip>
 
 
 Shape::Shape(double x, double y, double z, int color) 
-	: color(color), p1(4,1)
+	: color(color), pts(4,1), spaceLevel(0)
 {
 	// set up x,y,z in the matrix
-	p1[0][0] = x;
-	p1[1][0] = y;
-	p1[2][0] = z;
-	p1[3][0] = 1.0; // TODO: for now.
+	pts[0][0] = x;
+	pts[1][0] = y;
+	pts[2][0] = z;
+	pts[3][0] = 1.0; // TODO: for now.
 }
 
 Shape::Shape(const Shape &s)
-	: color(s.color), p1(s.p1)
+	: color(s.color), pts(s.pts), spaceLevel(s.spaceLevel)
 {	}
 
 Shape::~Shape()
@@ -28,19 +28,25 @@ Shape::~Shape()
 Shape& Shape::operator=(const Shape& rhs)
 {
 	this->color = rhs.color;
-	this->p1 = rhs.p1;
+	this->pts = rhs.pts;
+	this->spaceLevel = rhs.spaceLevel;
 	return *this;
 }
 
+void Shape::setSpaceLevel(unsigned int spaceLevel)
+{
+	this->spaceLevel = spaceLevel;
+}
+
+
 void Shape::out(std::ostream & os) const
 {
-	// TODO: test
 	// output format: "(color=<RGB_int> p1=[<x> <y> <z> <a>]'"
-	os << "(color=0x" << std::uppercase << std::hex << color << " p1=[";
+	os << "color=0x" << std::uppercase << std::hex << color << " p1=[";
 	// output x, y, z, and the 4th compoenent of p1
 	for (int i=0; i<4; i++)
 	{
-		os << p1[i][0];
+		os << pts[i][0];
 		// append a space except for last element
 		if (i != 3)
 		{
@@ -56,14 +62,14 @@ void Shape::in(std::istream & is)
 	// input format: "(color=<RGB_int> p1=[<x> <y> <z> <a>]'"
 	
 	// parse color
-	is.ignore(sizeof("(color=")-1);
+	is.ignore(sizeof("color=")-1);
 	is >> std::hex >> this->color;
 	
 	// parse p1
 	is.ignore(sizeof(" p1=[")-1);
 	for (int i = 0; i<4; i++)
 	{
-		is >> this->p1[i][0];
+		is >> this->pts[i][0];
 	}
 	
 	// discard the rest out of the stream
