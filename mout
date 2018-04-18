@@ -1,0 +1,26 @@
+g++ -c -Wall Shape.cpp -o Shape.o
+Shape.cpp:21:1: error: ‘m’ does not name a type
+ m
+ ^
+Shape.cpp: In member function ‘Shape& Shape::operator=(const Shape&)’:
+Shape.cpp:31:1: warning: no return statement in function returning non-void [-Wreturn-type]
+ }
+ ^
+Shape.cpp: At global scope:
+Shape.cpp:33:38: error: non-member function ‘std::ostream& out(std::ostream&)’ cannot have cv-qualifier
+ std::ostream& out(std::ostream & os) const
+                                      ^~~~~
+Shape.cpp: In function ‘std::ostream& out(std::ostream&)’:
+Shape.cpp:37:1: warning: no return statement in function returning non-void [-Wreturn-type]
+ }
+ ^
+Shape.cpp: At global scope:
+Shape.cpp:39:37: error: non-member function ‘std::istream& in(std::istream&)’ cannot have cv-qualifier
+ std::istream& in(std::istream & is) const
+                                     ^~~~~
+Shape.cpp: In function ‘std::istream& in(std::istream&)’:
+Shape.cpp:43:1: warning: no return statement in function returning non-void [-Wreturn-type]
+ }
+ ^
+Makefile:17: recipe for target 'Shape.o' failed
+make: *** [Shape.o] Error 1

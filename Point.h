@@ -12,33 +12,54 @@ public:
 	// @param color RGB representation of the color of the shape, each color is a byte.
 	Point(double x, double y, double z, int color);
 	
+	// Copy constructor for the Point class
+	// It builds on top of the copy constructor of the shape class
+	Point(const Point &s);
+
 	// This won't do anything, because the Point object contains POD.
 	// The default destructing will suffice.
 	virtual ~Point();
-	
-	Point(const Shape &s);
+
+	// assignment operator. Makes sure to build on the Shape's assignment
+	// operator.
 	Point& operator=(const Point& rhs);
 	
 	// This sets the GraphicsContext color to the shape's color 
 	// and draws a point at the point object's coordinates using the passed GraphicsContext pointer
 	virtual void draw(GraphicsContext* gs) const;
-	
-	// Default implementation of this will print the color and location, p1.
-	// However, it should be overriden by derived classes to display data concrete to those classes
+
+	// This implementation extends on the output of the Shape class by specifying the shape type,
+	// and simply closing the parenthesis to signify the end of the output report.
+	// Output Format: "p(color=<RGB_int> p1=[<x> <y> <z>]')"
 	// @param os The output stream to insert into to
-	// @return the output stream reference that was passed, after writing to it for chaining.
-	virtual std::ostream& out(std::ostream & os) const;
+	virtual void out(std::ostream & os) const;
 	
-	// Default implementation will be able to read color and location, p1, from istream.
+	// Default implementation will be able to read color and location, p1, from istream into object.
 	// This should be overriden by derived classes to parse any additional data.
+	// Input Format: "(color=<RGB_int> p1=[<x> <y> <z>]'"
 	// @param is The input stream to parse from
-	// @return the input stream reference that was 
-	virtual std::istream& in(std::istream & is) const;
+	virtual void in(std::istream & is);
 
 	// the closest we get to a "virtual copy constructor"
 	// This will return a new'd copy of the current shape
 	// It's the responsibility of the caller to delete!
 	virtual Shape* clone() const;
+	
 };
+
+// global overloading of the stream insertion operator for the Point class
+// utilizes Point::out to generate the output
+// @param os output stream to the left of the << operator
+// @param p  Point shape object to insert the output of into os
+// @return os to allow for chaining 
+std::ostream& operator<<(std::ostream &os, const Point &p);
+
+// global overloading of the stream extraction operator for the Point class
+// utilizes Point::in to generate the input
+// @param is input stream to the left of the >> operator
+// @param p  Point shape object to parse into
+// @return is to allow for chaining
+std::istream& operator>>(std::istream &is, Point &p);
+
 
 #endif
