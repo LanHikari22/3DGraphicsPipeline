@@ -28,7 +28,7 @@ public:
 	// a shape will have at least one point: the origin 
 	// @params (x,y,z) coordinates of the shape
 	// @param color RGB representation of the color of the shape, each color is a byte.
-	Shape(double x, double y, double z, int color);
+	Shape(double x, double y, double z, int color, int numPoints);
 	
 	// Copy consructor for shape
 	// Will copy the color and single point

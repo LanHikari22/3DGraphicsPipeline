@@ -11,11 +11,11 @@ class Line : public Shape {
 	
 public:
 	
-	// a shape will have at least one point, and should be utilized 
-	// @param p1 ref of Point encapsulating the (x y z) coordinates of the startpoint
-	// @param p2 ref of Point encapsulating the (x y z) coordinates of the endpoint
+	// A line contains two points: a startpoint and endpoint.
+	// @param pts 3x2 matrix consisting of a startpoint column and an endpoint column of [x y z]'
 	// @param color RGB representation of the color of the shape, each color is a byte.	
-	Line(const Point &p1, const Point &p2, int color);
+	// @throws matrixException if the matrix is not 3x2 (or bigger)
+	Line(const matrix &pts, int color);
 	
 	// Copy constructor for the Point class
 	// It builds on top of the copy constructor of the shape class
@@ -37,7 +37,7 @@ public:
 	// and simply closing the parenthesis to signify the end of the output report.
 	// Output Format: 
 	// "p(color=<RGB_int> p1=[<x1> <y1> <z1>]' 
-	//    p2=[<x2> <y2> <z2>]')"
+	//                    p2=[<x2> <y2> <z2>]')"
 	// @param os The output stream to insert into to
 	virtual void out(std::ostream & os) const;
 	
@@ -56,19 +56,19 @@ public:
 	
 };
 
-// global overloading of the stream insertion operator for the Point class
-// utilizes Point::out to generate the output
+// global overloading of the stream insertion operator for the class
+// utilizes Line::out to generate the output
 // @param os output stream to the left of the << operator
-// @param p  Point shape object to insert the output of into os
+// @param o  Line shape object to insert the output of into os
 // @return os to allow for chaining 
-std::ostream& operator<<(std::ostream &os, const Point &p);
+std::ostream& operator<<(std::ostream &os, const Line &o);
 
-// global overloading of the stream extraction operator for the Point class
-// utilizes Point::in to generate the input
+// global overloading of the stream extraction operator for the class
+// utilizes Line::in to generate the input
 // @param is input stream to the left of the >> operator
-// @param p  Point shape object to parse into
+// @param o  Line shape object to parse into
 // @return is to allow for chaining
-std::istream& operator>>(std::istream &is, Point &p);
+std::istream& operator>>(std::istream &is, Line &o);
 
 
 #endif

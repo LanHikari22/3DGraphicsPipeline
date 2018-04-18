@@ -5,7 +5,7 @@
 #include "Point.h"
 
 Point::Point(double x, double y, double z, int color)
-	: Shape(x,y,z,color)
+	: Shape(x,y,z,color,1)
 { }
 
 Point::Point(const Point &s)

@@ -6,8 +6,8 @@
 #include <iomanip>
 
 
-Shape::Shape(double x, double y, double z, int color) 
-	: color(color), pts(4,1), spaceLevel(0)
+Shape::Shape(double x, double y, double z, int color, int numPoints) 
+	: color(color), pts(4,numPoints), spaceLevel(0)
 {
 	// set up x,y,z in the matrix
 	pts[0][0] = x;
@@ -42,7 +42,9 @@ void Shape::setSpaceLevel(unsigned int spaceLevel)
 void Shape::out(std::ostream & os) const
 {
 	// output format: "(color=<RGB_int> p1=[<x> <y> <z> <a>]'"
-	os << "color=0x" << std::uppercase << std::hex << color << " p1=[";
+	// outputting in zero padded hex for color...
+	os  << "color=0x" << std::setw(6) << std::setfill('0') << std::uppercase 
+			<< std::hex << color << " p1=[";
 	// output x, y, z, and the 4th compoenent of p1
 	for (int i=0; i<4; i++)
 	{

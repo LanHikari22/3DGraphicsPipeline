@@ -3,31 +3,34 @@
 // Implementation cpp file for the Line concrete class and operator<</>> overloads
 
 #include "Line.h"
+#include <string>
 
-Line(const Point &p1, const Point &p2, int color);
-	: color(color), pts(3,2), spaceLevel(0)
+Line::Line(const matrix &pts, int color)
+	: Shape(pts[0][0], pts[1][0], pts[2][0], color, 2)
 { 
-	for (int i=0 i<4; i++)
+	// assign startpoint and endpoint. matrix is assumed 3x2 (or bigger), otherwise this fails
+	for (int r=0; r<3; r++)
 	{
-		// first column: startpoint
-		this->pts[i][0] = startpoint.pts[i][0];
-		// second column: endpoint
-		this->pts[i][1] = endpoint.pts[i][0];
-	}		
+		for (int c=0; c<2; c++)
+		{
+			this->pts[r][c] = pts[r][c];
+		}
+	}
+	// default row 3 is 1.0 for now (component 4)
+	this->pts[3][0] = 1.0;
+	this->pts[3][1] = 1.0;
 }
 
 Line::Line(const Line &s)
-	: color(color), pts(3,2), spaceLevel(s.spaceLevel)
-{
-	this->pts = s.pts;
-}
+	: Shape(s)
+{ }
 
 Line::~Line()
 {
 	// does nothing, but must be defined
 }
 
-Line& operator=(const Line& rhs);
+Line& Line::operator=(const Line& rhs)
 {
 	// TODO: test
 	
@@ -39,7 +42,7 @@ Line& operator=(const Line& rhs);
 	return *this;
 }
 
-void Point::draw(GraphicsContext* gs) const
+void Line::draw(GraphicsContext* gs) const
 {
 	// TODO: test
 
@@ -50,47 +53,71 @@ void Point::draw(GraphicsContext* gs) const
 	gs->drawLine(this->pts[0][0], this->pts[1][0], this->pts[0][1], this->pts[1][1]);
 }
 
-void Point::out(std::ostream & os) const
+void Line::out(std::ostream & os) const
 {
 	// TODO: test
 	
 	// output shape specifier
-	os << "p(";
+	os << "l(";
 	
 	// output shape-specific data
 	Shape::out(os);
 	
-	// close parenthesis! End of output report
-	os << ")";
+	// compute the string for a new line, spaceLevel accounts for if previous level was tabbed
+	std::string lineTab(sizeof("p(color=0xFFFFFF ")-1 + this->spaceLevel, ' ');
+
+	// output endpoint
+	os << std::endl << lineTab << "p2=[";
+	for (int i=0; i<4; i++)
+	{
+		os << pts[i][1];
+		// append a space except for last element
+		if (i != 3)
+		{
+			os << " ";
+		}
+	}
+	
+	// End of output report
+	os << "]')";
 }
 
-void Point::in(std::istream & is)
+void Line::in(std::istream & is)
 {
 	// TODO: test
 
 	// ignore shape specifier, and parse the shape-specific data
-	is.ignore(sizeof("p")-1);
+	is.ignore(sizeof("l(")-1);
 	Shape::in(is);
+	
+	// skip until you get to a point
+	is.ignore(100, '[');
+	
+	// parse endpoint
+	for (int i = 0; i<4; i++)
+	{
+		is >> this->pts[i][1];
+	}
 	
 	// Done! Ignore the last ')'. It's part of the format.
 	is.ignore(sizeof(")")-1);
 }
 
-Shape* Point::clone() const
+Shape* Line::clone() const
 {
 	// TODO: test
-	Point *p = new Point(*this);
-	return p;
+	Line *l = new Line(*this);
+	return l;
 }
 
-std::ostream& operator<<(std::ostream &os, const Point &p)
+std::ostream& operator<<(std::ostream &os, const Line &l)
 {
-	p.out(os);
+	l.out(os);
 	return os;
 }
 
-std::istream& operator>>(std::istream &is, Point &p)
+std::istream& operator>>(std::istream &is, Line &l)
 {
-	p.in(is);
+	l.in(is);
 	return is;
 }
