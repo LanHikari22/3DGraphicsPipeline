@@ -1,45 +1,56 @@
 // @Author Mohammed Alzakariya
-// This is a header file for the Triangle subclass of the Shape abstract class
+// This is a header file for the Rectangle subclass of the Shape abstract class
 // It also contains global overloads of operator<< and operator>> for the class
 
-#ifndef TRIANGLE_H
-#define TRIANGLE_H
+#ifndef RECTANGLE_H
+#define RECTANGLE_H
 
 #include "Shape.h"
 
-class Triangle : public Shape {
+class Rectangle : public Shape {
 	
 public:
 	
-	// A Triangle contains three vertices.
-	// @param pts 3x3 matrix consisting of 3 column vectors of [x y z]'
+	// A Rectangle contains four ORDERD vertices that must line-connect to form
+	// a rectangle.
+	// @param pts 3x4 matrix consisting of 4 column vectors of [x y z]'
 	// @param color RGB representation of the color of the shape, each color is a byte.	
-	// @throws matrixException if the matrix is not 3x3 (or bigger)
-	Triangle(const matrix &pts, int color);
+	// @throws matrixException if the matrix is not 3x4 (or bigger)
+	// @throws shapeException if 4 points passed do not represent a rectangle
+	// when connected in order p0 -> p1 -> p2 -> p3
+	Rectangle(const matrix &pts, int color);
 	
-	// Copy constructor for the Triangle class
+	// A rectangle represented as a 3x1 matrix, a column vector of the origin
+	// and the height and width of the rectangle
+	// @param pts 3x1 matrix consisting of 1 column vectors of [x y z]'
+	// @param color RGB representation of the color of the shape, each color is a byte.	
+	// @throws matrixException if the matrix is not 3x1 (or bigger)
+	Rectangle(const matrix &pts, double h, double w, int color);
+	
+	// Copy constructor for the Rectangle class
 	// It builds on top of the copy constructor of the shape class
-	Triangle(const Triangle &s);
+	Rectangle(const Rectangle &s);
 
 	// This won't do anything, because the object contains Plain old data (POD).
 	// The default destructing will suffice.
-	virtual ~Triangle();
+	virtual ~Rectangle();
 
 	// assignment operator. Makes sure to build on the Shape's assignment
 	// operator.
-	Triangle& operator=(const Triangle& rhs);
+	Rectangle& operator=(const Rectangle& rhs);
 	
 	// This sets the GraphicsContext color to the shape's color 
-	// and draws the triangle by drawing 3 segments using the GraphicsContext pointer
+	// and draws the Rectangle by drawing 4 segments using the GraphicsContext pointer
 	// @throws shapeException if any z-component is non-zero. 3D Drawing not supported yet
 	virtual void draw(GraphicsContext* gs) const;
 
 	// This implementation extends on the output of the Shape class by specifying the shape type,
 	// and simply closing the parenthesis to signify the end of the output report.
 	// Output Format: 
-	// "p(color=<RGB_int> p1=[<x1> <y1> <z1>]' 
+	// "r(color=<RGB_int> p1=[<x1> <y1> <z1>]' 
 	//                    p2=[<x2> <y2> <z2>]'
-	//					  p3=[<x3> <y3> <z3>]')"
+	//					  p3=[<x3> <y3> <z3>]'
+	//					  p4=[<x4> <y4> <z4>]')"
 	// @param os The output stream to insert into to
 	virtual void out(std::ostream & os) const;
 	
@@ -48,7 +59,8 @@ public:
 	// Input Format:
 	// "(color=<RGB_int> p1=[<x1> <y1> <z1>]' 
 	//                    p2=[<x2> <y2> <z2>]'
-	//					  p3=[<x3> <y3> <z3>]')"
+	//					  p3=[<x3> <y3> <z3>]'
+	//					  p4=[<x4> <y4> <z4>]')"
 	// Having the shape specifier at the start is optional.
 	// @throws shapeException if the format is invalid to parse
 	// @param is The input stream to parse from
@@ -62,18 +74,18 @@ public:
 };
 
 // global overloading of the stream insertion operator for the class
-// utilizes Triangle::out to generate the output
+// utilizes Rectangle::out to generate the output
 // @param os output stream to the left of the << operator
-// @param o  Triangle shape object to insert the output of into os
+// @param o  Rectangle shape object to insert the output of into os
 // @return os to allow for chaining 
-std::ostream& operator<<(std::ostream &os, const Triangle &o);
+std::ostream& operator<<(std::ostream &os, const Rectangle &o);
 
 // global overloading of the stream extraction operator for the class
-// utilizes Triangle::in to generate the input
+// utilizes Rectangle::in to generate the input
 // @param is input stream to the left of the >> operator
-// @param o  Triangle shape object to parse into
+// @param o  Rectangle shape object to parse into
 // @return is to allow for chaining
-std::istream& operator>>(std::istream &is, Triangle &o);
+std::istream& operator>>(std::istream &is, Rectangle &o);
 
 
 #endif

@@ -8,7 +8,7 @@
 Triangle::Triangle(const matrix &pts, int color)
 	: Shape(pts[0][0], pts[1][0], pts[2][0], color, 3)
 { 
-	// assign startpoint and endpoint. matrix is assumed 3x3 (or bigger), otherwise this fails
+	// assign p2/p3. matrix is assumed 3x3 (or bigger), otherwise this fails
 	for (int r=0; r<3; r++)
 	{
 		for (int c=0; c<3; c++)
@@ -33,20 +33,20 @@ Triangle::~Triangle()
 
 Triangle& Triangle::operator=(const Triangle& rhs)
 {
-	// TODO: test
-	
 	// Shape data
-	this->color = rhs.color;
-	this->pts = rhs.pts;
-	this->spaceLevel = rhs.spaceLevel;
+	assignShapeData(rhs);
 	
 	return *this;
 }
 
 void Triangle::draw(GraphicsContext* gs) const
 {
-	// TODO: test
-
+	// Make sure all z components is zero. 3D is not supported yet...
+	if (pts[2][0] != 0 || pts[2][1] != 0 || pts[2][2] != 0)
+	{
+		throw shapeException("3D Drawing Not implemented yet");
+	}
+	
 	// set the color to the shape's
 	gs->setColor(this->color);
 	
@@ -59,22 +59,20 @@ void Triangle::draw(GraphicsContext* gs) const
 }
 
 void Triangle::out(std::ostream & os) const
-{
-	// TODO: test
-	
+{	
 	// output shape specifier
 	os << "t(";
 	
 	// output shape-specific data
 	Shape::out(os);
 	
-	// compute the string for a new Triangle, spaceLevel accounts for if previous level was tabbed
-	std::string TriangleTab(sizeof("s(color=0xFFFFFF ")-1 + this->spaceLevel, ' ');
+	// compute the string for a new Line, spaceLevel accounts for if previous level was tabbed
+	std::string LineTab(sizeof("s(color=0xFFFFFF ")-1 + this->spaceLevel, ' ');
 
 	// output p2 and p3
 	for (int c=1; c<3; c++)
 	{
-		os << std::endl << TriangleTab << "p" << c+1 << "=[";
+		os << std::endl << LineTab << "p" << c+1 << "=[";
 		for (int r=0; r<4; r++)
 		{
 			os << pts[r][c];
@@ -88,37 +86,47 @@ void Triangle::out(std::ostream & os) const
 	}
 	
 	// End of output report
-	os << "]')";
+	os << ")";
 }
 
 void Triangle::in(std::istream & is)
 {
-	// TODO: test
-
-	// ignore shape specifier, and parse the shape-specific data
-	is.ignore(sizeof("t(")-1);
+	// parse the shape-specific data
 	Shape::in(is);
 	
+	char cskip = '\0';
 	// Parse p2 and p3
 	for (int c=1; c<3; c++)
 	{
 		// skip until you get to a point
-		is.ignore(100, '[');
+		is >> cskip;
+		if (cskip != 'p')
+		{
+			throw shapeException("Invalid shape Format: Expected start of a new point");
+		}
+		is.ignore(sizeof("1=[")-1);
 		
-		// parse endpoint
+		// parse point
 		for (int i = 0; i<4; i++)
 		{
 			is >> this->pts[i][c];
 		}
+		
+		// discard the rest of the point ("]'")
+		is.ignore(sizeof("]'")-1);
 	}
 	
-	// Done! Ignore the last ')'. It's part of the format.
-	is.ignore(sizeof(")")-1);
+	// Done! Parse the last ')'. It's part of the format.
+	is >> cskip;
+	
+	if (cskip != ')')
+	{
+		throw shapeException("Invalid shape Format: Expected End Parenthesis");
+	}	
 }
 
 Shape* Triangle::clone() const
 {
-	// TODO: test
 	Triangle *t = new Triangle(*this);
 	return t;
 }

@@ -20,14 +20,19 @@ Point::~Point()
 Point& Point::operator=(const Point& rhs)
 {	
 	// Shape data
-	this->color = rhs.color;
-	this->pts = rhs.pts;
+	assignShapeData(rhs);
 	
 	return *this;
 }
 
 void Point::draw(GraphicsContext* gs) const
 {
+	// Make sure the z component is zero. 3D is not supported yet...
+	if (pts[2][0] != 0)
+	{
+		throw shapeException("3D Drawing Not implemented yet");
+	}
+	
 	// simply set the color and draw a pixel at the origin of the shape
 	gs->setColor(this->color);
 	gs->setPixel(this->pts[0][0], this->pts[1][0]);
@@ -47,12 +52,15 @@ void Point::out(std::ostream & os) const
 
 void Point::in(std::istream & is)
 {
-	// ignore shape specifier, and parse the shape-specific data
-	is.ignore(sizeof("p(")-1);
+	// Input Format: "(color=<RGB_int> p1=[<x> <y> <z> <a>]')"
+	// No additional data, just parse the shape data
 	Shape::in(is);
 	
-	// Done! Ignore the last ')'. It's part of the format.
-	is.ignore(sizeof(")")-1);
+	// Done! Parse the last ')'. It's part of the format.
+	char cskip = '\0';
+	is >> cskip;
+	if (cskip != ')' ) throw shapeException("Invalid shape Format:");
+
 }
 
 Shape* Point::clone() const

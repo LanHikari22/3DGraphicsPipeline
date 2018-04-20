@@ -30,6 +30,7 @@ public:
 	
 	// This sets the GraphicsContext color to the shape's color 
 	// and draws a point at the point object's coordinates using the passed GraphicsContext pointer
+	// @throws shapeException if z-component is non-zero. 3D drawing not supported yet.
 	virtual void draw(GraphicsContext* gs) const;
 
 	// This implementation extends on the output of the Shape class by specifying the shape type,
@@ -41,7 +42,9 @@ public:
 	// Default implementation will be able to read color and location, pts, from istream into object.
 	// This should be overriden by derived classes to parse any additional data.
 	// Input Format: "(color=<RGB_int> p1=[<x> <y> <z>]'"
+	// Having a shape specifier character before '(' is optional.
 	// @param is The input stream to parse from
+	// @throws shapeException if the format is invalid
 	virtual void in(std::istream & is);
 
 	// the closest we get to a "virtual copy constructor"

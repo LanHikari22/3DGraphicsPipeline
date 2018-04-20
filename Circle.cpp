@@ -1,14 +1,16 @@
 // @author Mohammed Alzakariya
 // @file Point.cpp
-// Implementation cpp file for the Line concrete class and operator<</>> overloads
+// Implementation cpp file for the Circle concrete class and operator<</>> overloads
 
-#include "Line.h"
+#include "Circle.h"
 #include <string>
+// need this to calculate radius given origin and an arbitrary point on circle
+#include <cmath> 
 
-Line::Line(const matrix &pts, int color)
+Circle::Circle(const matrix &pts, int color)
 	: Shape(pts[0][0], pts[1][0], pts[2][0], color, 2)
 { 
-	// assign startpoint and endpoint. matrix is assumed 3x2 (or bigger), otherwise this fails
+	// assign origin and radius point. matrix is assumed 3x2 (or bigger), otherwise this fails
 	for (int r=0; r<3; r++)
 	{
 		for (int c=0; c<2; c++)
@@ -21,16 +23,16 @@ Line::Line(const matrix &pts, int color)
 	this->pts[3][1] = 1.0;
 }
 
-Line::Line(const Line &s)
+Circle::Circle(const Circle &s)
 	: Shape(s)
 { }
 
-Line::~Line()
+Circle::~Circle()
 {
 	// does nothing, but must be defined
 }
 
-Line& Line::operator=(const Line& rhs)
+Circle& Circle::operator=(const Circle& rhs)
 {	
 	// Shape data
 	assignShapeData(rhs);
@@ -38,7 +40,7 @@ Line& Line::operator=(const Line& rhs)
 	return *this;
 }
 
-void Line::draw(GraphicsContext* gs) const
+void Circle::draw(GraphicsContext* gs) const
 {
 	// Make sure the z component is zero. 3D is not supported yet...
 	if (pts[2][0] != 0 || pts[2][1] != 0)
@@ -49,14 +51,23 @@ void Line::draw(GraphicsContext* gs) const
 	// set the color to the shape's
 	gs->setColor(this->color);
 	
-	// utilize line drawing algorithm in GraphicsContext
-	gs->drawLine(this->pts[0][0], this->pts[1][0], this->pts[0][1], this->pts[1][1]);
+	// Compute the radius...
+	double dx = (pts[0][0] - pts[0][1]);
+	double dy = (pts[1][0] - pts[1][1]);
+	// Check if one of them is zero. Please no sqrt!
+	double r;
+	if (dx == 0) r = std::abs(dy);
+	else if (dy == 0) r = std::abs(dx);
+	else r = std::sqrt(dx*dx + dy*dy);
+	
+	// utilize Circle drawing algorithm in GraphicsContext
+	gs->drawCircle(this->pts[0][0], this->pts[1][0], r);
 }
 
-void Line::out(std::ostream & os) const
+void Circle::out(std::ostream & os) const
 {	
 	// output shape specifier
-	os << "l(";
+	os << "c(";
 	
 	// output shape-specific data
 	Shape::out(os);
@@ -64,7 +75,7 @@ void Line::out(std::ostream & os) const
 	// compute the string for a new line, spaceLevel accounts for if previous level was tabbed
 	std::string lineTab(sizeof("s(color=0xFFFFFF ")-1 + this->spaceLevel, ' ');
 
-	// output endpoint
+	// output point on the circle
 	os << std::endl << lineTab << "p2=[";
 	for (int i=0; i<4; i++)
 	{
@@ -80,9 +91,9 @@ void Line::out(std::ostream & os) const
 	os << "]')";
 }
 
-void Line::in(std::istream & is)
+void Circle::in(std::istream & is)
 {
-	// Parse  shape-specific data
+	// Parse shape-specific data
 	Shape::in(is);
 	
 	// skip until you get to a point
@@ -94,7 +105,7 @@ void Line::in(std::istream & is)
 	}
 	is.ignore(sizeof("1=[")-1);
 	
-	// parse endpoint
+	// parse point on the circle
 	for (int i = 0; i<4; i++)
 	{
 		is >> this->pts[i][1];
@@ -112,20 +123,20 @@ void Line::in(std::istream & is)
 	}	
 }
 
-Shape* Line::clone() const
+Shape* Circle::clone() const
 {
-	Line *l = new Line(*this);
-	return l;
+	Circle *c = new Circle(*this);
+	return c;
 }
 
-std::ostream& operator<<(std::ostream &os, const Line &l)
+std::ostream& operator<<(std::ostream &os, const Circle &c)
 {
-	l.out(os);
+	c.out(os);
 	return os;
 }
 
-std::istream& operator>>(std::istream &is, Line &l)
+std::istream& operator>>(std::istream &is, Circle &c)
 {
-	l.in(is);
+	c.in(is);
 	return is;
 }

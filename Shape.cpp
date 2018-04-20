@@ -25,11 +25,18 @@ Shape::~Shape()
 	// does nothing, but is needed!
 }
 
-Shape& Shape::operator=(const Shape& rhs)
+
+void Shape::assignShapeData(const Shape& rhs)
 {
 	this->color = rhs.color;
 	this->pts = rhs.pts;
 	this->spaceLevel = rhs.spaceLevel;
+
+}
+
+Shape& Shape::operator=(const Shape& rhs)
+{
+	assignShapeData(rhs);
 	return *this;
 }
 
@@ -60,8 +67,20 @@ void Shape::out(std::ostream & os) const
 
 void Shape::in(std::istream & is)
 {
-	// TODO: test
 	// input format: "(color=<RGB_int> p1=[<x> <y> <z> <a>]'"
+		
+	// parse initial '(' to signify start of format. Might start with shape specifier.
+	char cskip = '\0';
+	is >> cskip;
+	if (cskip != '(')
+	{
+		// OK. Maybe we parsed the optional shape type character specifier...
+		is >> cskip;
+		if (cskip != '(')
+		{
+			throw shapeException("Invalid Shape Format: Open Parenthesis");
+		}
+	}
 	
 	// parse color
 	is.ignore(sizeof("color=")-1);
@@ -74,8 +93,8 @@ void Shape::in(std::istream & is)
 		is >> this->pts[i][0];
 	}
 	
-	// discard the rest out of the stream
-	is.ignore(sizeof("]'")-1);		
+	// discard the rest out of the stream ("]'")
+	is.ignore(sizeof("]'")-1);
 }
 
 std::ostream& operator<<(std::ostream &os, const Shape &s)

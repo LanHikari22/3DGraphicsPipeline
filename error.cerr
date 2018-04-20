@@ -1,3 +1,5 @@
 g++ -c -Wall main.cpp -o main.o
 g++ -MM -c -Wall main.cpp > main.d
-g++ main.o gcontext.o x11context.o Shape.o Point.o Line.o Triangle.o matrix.o -lX11 -o image
+g++ -c -Wall Rectangle.cpp -o Rectangle.o
+g++ -MM -c -Wall Rectangle.cpp > Rectangle.d
+g++ main.o gcontext.o x11context.o Shape.o Point.o Line.o Triangle.o Circle.o Rectangle.o Image.o matrix.o -lX11 -o image

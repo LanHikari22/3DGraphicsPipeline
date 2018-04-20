@@ -10,18 +10,39 @@
 #include "matrix.h"
 #include "x11context.h"
 
+#include <stdexcept>	// for std::runtime_error
+ 
+// a helper class to bundle a message with any thrown exceptions.
+// To use, simply 'throw matrixException("A descriptive message about
+// the problem")'.  This will throw the exception object by value.
+// Recommendation is to catch by reference (to prevent slicing).
+class shapeException:public std::runtime_error
+{
+	public:
+		shapeException(std::string message):
+		      std::runtime_error((std::string("Shape Exception: ") + 
+		               message).c_str()) {}
+};
+
 class Shape {
 	
 protected:
 	// RGB representation of the color of the shape
 	int color;
+	
 	// points matrix: 4xn matrix; set to the transpose of [X Y Z 1.0]. (TODO: 1.0 for now)
 	// In the Shape abstract class it's 4x1, but it makes sense to extend it to n columns
 	// for n points in the shape.
 	matrix pts;
-	// number of spaces to pad output lines after a new line.
-	// 			This is line 1.
-	// [-------]This is line 2.
+	
+	// Additional amount of space padding to insert after line 1.
+	//          This is line 1.
+	// [-------]This is line 2. ([----]: Automatic padding)
+	// someText:         This is line 1.
+	// [xxxxxxx][-------]This is line 2. ([xxxx]: Specified extra padding)
+	// [xxxxxxx] would be the specified extra padding: spaceLevel.
+	// Tabs can certainly mess this process, so if tabs are used, the tab to space equivalent is
+	// expected to be accounted for.
 	unsigned int spaceLevel;
 	
 public:
@@ -37,9 +58,17 @@ public:
 	// virtual destructor must be present and defined, even if it does nothing
 	virtual ~Shape();
 	
+	// I can't call the operator= of the base class, but I can call this...
+	// This basically assigns all Shape related data, so derived classes wouldn't
+	// have to
+	void assignShapeData(const Shape& rhs);
+	
 	// Assigns color and coordinates of the rhs shape to this shape
 	Shape& operator=(const Shape& rhs);
 	
+	// For now, this can only handle drawing in 2D.
+	// a concrete class defines the exact mechanisms of drawing this
+	// It should throw a shapeException if the z component is non-zero while trying to draw.
 	virtual void draw(GraphicsContext* gs) const = 0;
 	
 	// the amoount of space padding to put in a second line when outputting to a stream
@@ -53,8 +82,11 @@ public:
 	
 	// Default implementation will be able to read color and location, pts, from istream into object.
 	// This should be overriden by derived classes to parse any additional data.
-	// Input Format: "color=<RGB_int> p1= [<x1> <y1> <z1> <a1>]'"
+	// Input Format: "(color=<RGB_int> p1= [<x1> <y1> <z1> <a1>]'"
+	// If a character comes before the '(' to signify shape type, it is ignored by this
+	// parsing function.
 	// @param is The input stream to parse from
+	// @throws shapeException for invalid format
 	virtual void in(std::istream & is);
 	
 	// the closest we get to a "virtual copy constructor"
