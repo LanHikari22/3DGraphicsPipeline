@@ -22,7 +22,8 @@ static void testTriangle(GraphicsContext *gc);
 static void testCircle(GraphicsContext *gc);
 // Tests overall functionality of the Rectangle class
 static void testRectangle(GraphicsContext *gc);
-
+// Tests overall functionality of the Polygon class
+static void testPolygon(GraphicsContext *gc);
 // Tests overall functionality of the image class
 static void testImage(GraphicsContext *gc);
 // Generates a file full of randoms hapes which is used for testing the Image class
@@ -42,6 +43,7 @@ int main(void)
 	testTriangle(gc);
 	testCircle(gc);
 	testRectangle(gc);
+	testPolygon(gc);
 	waitEnter();
 	
 	// Test the Image class
@@ -96,21 +98,21 @@ static void testImage(GraphicsContext *gc)
 	matrix ml(3,2);
 	ml[0][0] = 400;	ml[0][1] = 33;
 	ml[1][0] = 100;	ml[1][1] = 22;
-	ml[2][0] = 0;	ml[2][0] = 0;
+	ml[2][0] = 0;	ml[2][1] = 0;
 	Shape *sl = new Line(ml, CL);
 	
 	const int CT = GraphicsContext::WHITE;
 	matrix mt = matrix(3,3);
 	mt[0][0] = 100;	mt[0][1] = 250;	mt[0][2] = 0;
 	mt[1][0] = 500;	mt[1][1] = 500;	mt[1][2] = 0;
-	mt[2][0] = 0;	mt[2][0] = 0;	mt[2][2] = 0;
+	mt[2][0] = 0;	mt[2][1] = 0;	mt[2][2] = 0;
 	Shape *st = new Triangle(mt, CT);
 	
 	const int CC = GraphicsContext::MAGENTA;
 	matrix mc(3,2);
 	mc[0][0] = 0;	mc[0][1] = 256;
 	mc[1][0] = 0;	mc[1][1] = 400;
-	mc[2][0] = 0;	mc[2][0] = 0;
+	mc[2][0] = 0;	mc[2][1] = 0;
 	Shape *sc = new Circle(mc, CC);
 	
 	const int CR = GraphicsContext::YELLOW;
@@ -121,6 +123,17 @@ static void testImage(GraphicsContext *gc)
 	const int rw = mr[0][0];
 	const int rh = mr[1][0];
 	Shape *sr = new Rectangle(mr, rw, rh, CR);
+	
+	const int CG = GraphicsContext::CYAN;
+	int numColumns = 6;
+	matrix mg(3, numColumns);
+	mg[0][0] = 10;	mg[0][1] = 20;	mg[0][2] = 40;
+	mg[1][0] = 50;	mg[1][1] = 100;	mg[1][2] = 200;
+	mg[2][0] = 0;	mg[2][1] = 0;	mg[2][2] = 0;
+	mg[0][3] = 80;	mg[0][4] = 160;	mg[0][5] = 380;
+	mg[1][3] = 400;	mg[1][4] = 300;	mg[1][5] = 500;
+	mg[2][3] = 0;	mg[2][4] = 0;	mg[2][5] = 0;
+	Shape *sg = new Polygon(numColumns, mg, CG);
 	
 	// First, add point shape twice, should display it twice
 	img0->add(sp);
@@ -164,6 +177,7 @@ static void testImage(GraphicsContext *gc)
 	img1.add(st);
 	img1.add(sc);
 	img1.add(sr);
+	img1.add(sg);
 	*img0 = img1;
 	img0->draw(gc);
 	// Test that all of the vertices of each shape have been drawn
@@ -184,6 +198,11 @@ static void testImage(GraphicsContext *gc)
 				   & (gc->getPixel(mr[0][0]+rw/2, mr[1][0]-rh/2) == CR)
 				   & (gc->getPixel(mr[0][0]+rw/2, mr[1][0]+rh/2) == CR)
 	   	   	   	   & (gc->getPixel(mr[0][0]-rw/2, mr[1][0]+rh/2) == CR);
+	// Test Polygon sg vertices
+	for (int c=0; c<numColumns; c++)
+	{
+		verticesDrawn &= gc->getPixel(mg[0][c], mg[1][c]) == CG;
+	}
 	
 	if (verticesDrawn)
 	{
@@ -216,7 +235,7 @@ static void testPoint(GraphicsContext *gc)
 	std::cout << "Testing Point..." << std::endl;
 	
 	std::cout << "  Allocating Point(x,y,z,color) on the heap..." << std::endl;
-	Shape *s0 = new Point(255, 255, 0, GraphicsContext::WHITE);
+	Point *s0 = new Point(255, 255, 0, GraphicsContext::WHITE);
 	
 	std::cout << "  Testing Operator<<..." << std::endl;
 	std::cout << "    Expected output: p(color=0xFFFFFF p1=[255 255 0 1]')" << std::endl;
@@ -252,10 +271,10 @@ static void testPoint(GraphicsContext *gc)
 	delete s0;
 	
 	std::cout << "  Testing Clone..." << std::endl;
-	s0 = s1.clone();
+	Shape* s2 = s1.clone();
 	std::cout << "    Expected output: " << s1 << std::endl;
-	std::cout << "    Actual output:   " << *s0 << std::endl;
-	delete s0;
+	std::cout << "    Actual output:   " << *s2 << std::endl;
+	delete s2;
 	
 	// Test Exceptions
 	std::cout << "  Testing Exceptions..." << std::endl;
@@ -293,7 +312,7 @@ static void testLine(GraphicsContext *gc)
 	pts[0][0] = 255;	pts[0][1] = 33;
 	pts[1][0] = 255;	pts[1][1] = 22;
 	pts[2][0] = 0;		pts[2][1] = 0;
-	Shape *s0 = new Line(pts, GraphicsContext::WHITE);
+	Line *s0 = new Line(pts, GraphicsContext::WHITE);
 	
 	// Set space level for prompt text of "    Actual output:   " for nice printing
 	const unsigned int SPACE_LEVEL = sizeof("    Actual output:   ")-1;
@@ -344,10 +363,10 @@ static void testLine(GraphicsContext *gc)
 	
 	// Testing Clone
 	std::cout << "  Testing Clone..." << std::endl;
-	s0 = s1.clone();
+	Shape *s2 = s1.clone();
 	std::cout << "    Expected output: " << s1 << std::endl;
-	std::cout << "    Actual output:   " << *s0 << std::endl;
-	delete s0;
+	std::cout << "    Actual output:   " << *s2 << std::endl;
+	delete s2;
 
 	// Test Exceptions
 	std::cout << "  Testing Exceptions..." << std::endl;
@@ -386,7 +405,7 @@ static void testTriangle(GraphicsContext *gc)
 	pts[0][0] = 500;	pts[0][1] = 250;	pts[0][2] = 0;
 	pts[1][0] = 500;	pts[1][1] = 250;	pts[1][2] = 0;
 	pts[2][0] = 0;		pts[2][1] = 0;		pts[2][2] = 0;
-	Shape *s0 = new Triangle(pts, GraphicsContext::RED);
+	Triangle *s0 = new Triangle(pts, GraphicsContext::RED);
 	
 	// Set space level for prompt text of "    Actual output:   " for nice printing
 	const unsigned int SPACE_LEVEL = sizeof("    Actual output:   ")-1;
@@ -440,10 +459,10 @@ static void testTriangle(GraphicsContext *gc)
 	
 	// Testing Clone
 	std::cout << "  Testing Clone..." << std::endl;
-	s0 = s1.clone();
+	Shape *s2 = s1.clone();
 	std::cout << "    Expected output: " << s1 << std::endl;
-	std::cout << "    Actual output:   " << *s0 << std::endl;
-	delete s0;
+	std::cout << "    Actual output:   " << *s2 << std::endl;
+	delete s2;
 	
 	// Test Exceptions
 	std::cout << "  Testing Exceptions..." << std::endl;
@@ -481,7 +500,7 @@ static void testCircle(GraphicsContext *gc)
 	pts[0][0] = 255;	pts[0][1] = 33;
 	pts[1][0] = 255;	pts[1][1] = 22;
 	pts[2][0] = 0;		pts[2][1] = 0;
-	Shape *s0 = new Circle(pts, GraphicsContext::MAGENTA);
+	Circle *s0 = new Circle(pts, GraphicsContext::MAGENTA);
 	
 	// Set space level for prompt text of "    Actual output:   " for nice printing
 	const unsigned int SPACE_LEVEL = sizeof("    Actual output:   ")-1;
@@ -489,7 +508,7 @@ static void testCircle(GraphicsContext *gc)
 	
 	// Testing Operator<<
 	std::cout << "  Testing Operator<<..." << std::endl;
-	std::cout << "    Expected output: l(color=0xFFFFFF p1=[255 255 0 1]'" << std::endl;
+	std::cout << "    Expected output: l(color=0xFF00FF p1=[255 255 0 1]'" << std::endl;
 	std::cout << "                                      p2=[33 22 0 1]')" << std::endl;
 	std::cout << "    Actual output:   " << *s0 << std::endl;
 	
@@ -532,10 +551,10 @@ static void testCircle(GraphicsContext *gc)
 	
 	// Testing Clone
 	std::cout << "  Testing Clone..." << std::endl;
-	s0 = s1.clone();
+	Shape *s2 = s1.clone();
 	std::cout << "    Expected output: " << s1 << std::endl;
-	std::cout << "    Actual output:   " << *s0 << std::endl;
-	delete s0;
+	std::cout << "    Actual output:   " << *s2 << std::endl;
+	delete s2;
 
 	// Test Exceptions
 	std::cout << "  Testing Exceptions..." << std::endl;
@@ -577,7 +596,7 @@ static void testRectangle(GraphicsContext *gc)
 	pts[0][3] = 250;
 	pts[1][3] = 500;
 	pts[2][3] = 0;
-	Shape *s0 = new Rectangle(pts, GraphicsContext::YELLOW);
+	Rectangle *s0 = new Rectangle(pts, GraphicsContext::YELLOW);
 	
 	// Set space level for prompt text of "    Actual output:   " for nice printing
 	const unsigned int SPACE_LEVEL = sizeof("    Actual output:   ")-1;
@@ -585,7 +604,7 @@ static void testRectangle(GraphicsContext *gc)
 	
 	// Testing Operator<<
 	std::cout << "  Testing Operator<<..." << std::endl;
-	std::cout << "    Expected output: r(color=0xFF0000 p1=[250 250 0 1]'" << std::endl;
+	std::cout << "    Expected output: r(color=0xFFFF00 p1=[250 250 0 1]'" << std::endl;
 	std::cout << "                                      p2=[500 250 0 1]'" << std::endl;
 	std::cout << "                                      p3=[500 500 0 1]'" << std::endl;
 	std::cout << "                                      p4=[250 500 0 1]')" << std::endl;
@@ -594,7 +613,7 @@ static void testRectangle(GraphicsContext *gc)
 	// Testing Operator>>
 	std::cout << "  Testing Operator>>..." << std::endl;
 	std::string spacePad = std::string(SPACE_LEVEL, ' ');
-	std::string inStr("l(color=0x00FFFF p1=[50 50 0 1]'\n");
+	std::string inStr("r(color=0x00FFFF p1=[50 50 0 1]'\n");
 	inStr += spacePad  + "                 p2=[100 50 0 1]'\n";
 	inStr += spacePad  + "                 p3=[100 100 0 1]'\n";
 	inStr += spacePad  + "                 p4=[50 100 0 1]')";
@@ -615,6 +634,7 @@ static void testRectangle(GraphicsContext *gc)
 	double h3= 222.2;
 	Rectangle s3(pts, w3, h3,GraphicsContext::GREEN);
 	s3.setSpaceLevel(SPACE_LEVEL); // set first line startpad level
+	std::cout << "beep" << std::endl;
 	*s0 = s3;
 	std::cout << "    Expected output: " << s3 << std::endl;
 	std::cout << "    Actual output:   " << *s0 << std::endl;
@@ -635,10 +655,10 @@ static void testRectangle(GraphicsContext *gc)
 	// Testing Clone
 	delete s0;
 	std::cout << "  Testing Clone..." << std::endl;
-	s0 = s1.clone();
+	Shape *s2 = s1.clone();
 	std::cout << "    Expected output: " << s1 << std::endl;
-	std::cout << "    Actual output:   " << *s0 << std::endl;
-	delete s0;
+	std::cout << "    Actual output:   " << *s2 << std::endl;
+	delete s2;
 	
 	// Test Exceptions
 	std::cout << "  Testing Exceptions..." << std::endl;
@@ -680,12 +700,132 @@ static void testRectangle(GraphicsContext *gc)
 }
 
 
+static void testPolygon(GraphicsContext *gc)
+{
+	std::cout << "Testing Polygon..." << std::endl;
+	
+	std::cout << "  Allocating Polygon(numColumns, pts,color) on the heap..." << std::endl;
+	matrix pts(3,5);
+	pts[0][0] = 250;	pts[0][1] = 500;	pts[0][2] = 500;
+	pts[1][0] = 250;	pts[1][1] = 250;	pts[1][2] = 500;
+	pts[2][0] = 0;		pts[2][1] = 0;		pts[2][2] = 0;
+	pts[0][3] = 250;	pts[0][4] = 222;
+	pts[1][3] = 500;	pts[1][4] = 222;
+	pts[2][3] = 0;		pts[2][4] = 0;
+	Polygon *s0 = new Polygon(5, pts, GraphicsContext::YELLOW);
+	
+	// Set space level for prompt text of "    Actual output:   " for nice printing
+	const unsigned int SPACE_LEVEL = sizeof("    Actual output:   ")-1;
+	s0->setSpaceLevel(SPACE_LEVEL);
+	
+	// Testing Operator<<
+	std::cout << "  Testing Operator<<..." << std::endl;
+	std::cout << "    Expected output: g(color=0xFFFF00 p1=[250 250 0 1]'" << std::endl;
+	std::cout << "                                      p2=[500 250 0 1]'" << std::endl;
+	std::cout << "                                      p3=[500 500 0 1]'" << std::endl;
+	std::cout << "                                      p4=[250 500 0 1]'" << std::endl;
+	std::cout << "                                      p5=[222 222 0 1]')" << std::endl;
+
+	std::cout << "    Actual output:   " << *s0 << std::endl;
+	
+	// Testing Operator>>
+	std::cout << "  Testing Operator>>..." << std::endl;
+	std::string spacePad = std::string(SPACE_LEVEL, ' ');
+	std::string inStr("g(color=0x00FFFF p1=[50 50 0 1]'\n");
+	inStr += spacePad  + "                 p2=[100 50 0 1]'\n";
+	inStr += spacePad  + "                 p3=[100 100 0 1]'\n";
+	inStr += spacePad  + "                 p4=[50 100 0 1]'\n";
+	inStr += spacePad  + "                 p5=[100 150 0 1]'\n";
+	inStr += spacePad  + "                 p6=[150 200 0 1]')";
+
+	std::stringstream ss(inStr);
+	ss >> *s0;
+	std::cout << "    Expected output: " << inStr << std::endl;
+	std::cout << "    Actual output:   " << *s0 << std::endl;
+	
+	// Testing Copy Constructor
+	std::cout << "  Testing Copy Constructor..." << std::endl;
+	Polygon s1(*((Polygon*)s0));
+	std::cout << "    Expected output: " << *s0 << std::endl;
+	std::cout << "    Actual output:   " << s1 << std::endl;
+	
+	// Testing Operator=
+	std::cout << "  Testing Operator=..." << std::endl;
+	Polygon s3(pts,GraphicsContext::RED);
+	s3.addVertex(pts[0][1]+50, pts[1][1]+50, 0);
+	s3.addVertex(pts[0][2]+50, pts[1][2]+50, 0);
+	s3.addVertex(pts[0][3]+50, pts[1][3]+50, 0);
+	s3.setSpaceLevel(SPACE_LEVEL); // set first line startpad level
+	*s0 = s3;
+	std::cout << "    Expected output: " << s3 << std::endl;
+	std::cout << "    Actual output:   " << *s0 << std::endl;
+	
+	// Testing Draw
+	std::cout << "  Testing Draw...";
+	s0->draw(gc);
+	bool success = gc->getPixel(pts[0][0], pts[1][0]) == GraphicsContext::RED
+			    && gc->getPixel(pts[0][1]+50, pts[1][1]+50) == GraphicsContext::RED
+			    && gc->getPixel(pts[0][2]+50, pts[1][2]+50) == GraphicsContext::RED
+			    && gc->getPixel(pts[0][3]+50, pts[1][3]+50) == GraphicsContext::RED;
+	if (success)
+		std::cout << " OK!" << std::endl;
+	else
+		std::cout << " FAILED!" << std::endl;
+	
+	// Testing Clone
+	delete s0;
+	std::cout << "  Testing Clone..." << std::endl;
+	Shape *s2 = s1.clone();
+	std::cout << "    Expected output: " << s1 << std::endl;
+	std::cout << "    Actual output:   " << *s2 << std::endl;
+	delete s2;
+	
+	// Test Exceptions
+	std::cout << "  Testing Exceptions..." << std::endl;
+	
+	std::cout << "  Testing Parsing Exception is thrown... ";
+	try
+	{
+		ss = std::stringstream("g(color=0x0what'sup?00000 p1=[500 500 YEAH!500 500]'BEEEP!~))))))))");
+		ss >> s3;
+		std::cout << "NOT THROWN!" << std::endl;
+	} catch (shapeException)
+	{
+		std::cout << "thrown!" << std::endl;
+	}
+	
+	std::cout << "  Testing Drawing 3D Point... ";
+	try
+	{
+		pts[2][0] = 1; pts[2][1] = 1; pts[2][2] = 1;
+		Polygon s4(pts,GraphicsContext::RED);
+		s4.draw(gc);
+		std::cout << "NOT THROWN!" << std::endl;
+	} catch (shapeException)
+	{
+		std::cout << "thrown!" << std::endl;
+	}
+	
+	std::cout << "  Testing drawing less than 3 vertices polygon... ";
+	try
+	{
+		
+		Polygon s4(pts,GraphicsContext::RED);
+		s4.draw(gc);
+		std::cout << "NOT THROWN!" << std::endl;
+
+	} catch (shapeException)
+	{
+		std::cout << "thrown!" << std::endl;
+	}
+}
+
 static std::string generateRandomImageFile(GraphicsContext *gc)
 {
 	/* initialize random seed */
 	srand (time(NULL));
 
-	const char SHAPE_SPECIFIERS[] = {'p', 'l', 't', 'c', 'r'};
+	const char SHAPE_SPECIFIERS[] = {'p', 'l', 't', 'c', 'r', 'g'};
 	
 	const std::string FILENAME("Random.img");
 	
@@ -743,11 +883,16 @@ static std::string generateRandomImageFile(GraphicsContext *gc)
 				randomImg->add(&r);
 			}
 			break;
+			case 'g':
+			{
+				Polygon g(numColumns, m, rand() % 0xFFFFFF);
+				randomImg->add(&g);
+			}
+			break;
 		}
 	}
-	
+		
 	ofs << *randomImg;
-	
 	delete randomImg;
 	ofs.close();
 	return FILENAME;
@@ -761,5 +906,4 @@ static void testImage_DrawFile(GraphicsContext *gc, std::string filename)
 	ifs.close();
 	
 	img.draw(gc);
-	
 }

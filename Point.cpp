@@ -18,7 +18,9 @@ Point::~Point()
 }
 
 Point& Point::operator=(const Point& rhs)
-{	
+{
+	
+	std::cout << "Point::operator= called" << std::endl;
 	// Shape data
 	assignShapeData(rhs);
 	

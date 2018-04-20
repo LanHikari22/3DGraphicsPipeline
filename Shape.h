@@ -64,7 +64,8 @@ public:
 	void assignShapeData(const Shape& rhs);
 	
 	// Assigns color and coordinates of the rhs shape to this shape
-	Shape& operator=(const Shape& rhs);
+	// Never call the Shape's operator=, That makes no sense!
+	Shape& operator=(const Shape& rhs) = delete;
 	
 	// For now, this can only handle drawing in 2D.
 	// a concrete class defines the exact mechanisms of drawing this

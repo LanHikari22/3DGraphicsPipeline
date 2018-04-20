@@ -91,10 +91,8 @@ std::ostream& Image::out(std::ostream &os) const
 
 std::istream& Image::in(std::istream &is)
 {
-	// TODO: implement
 	// parse in a character to determine type
 	char shapeSpecifier = '\0';
-	
 	
 	// Parse Shape streams until non-shape data is detected or End of Stream
 	bool detectedNonShape = false;
@@ -139,6 +137,14 @@ std::istream& Image::in(std::istream &is)
 				Rectangle r(m_r, 0);
 				is >> r;
 				this->add(&r);
+			}
+			break;
+			case 'g':
+			{
+				matrix m_g(4,1);
+				Polygon g(m_g, 0);
+				is >> g;
+				this->add(&g);
 			}
 			break;
 			default:

@@ -73,7 +73,7 @@ Rectangle& Rectangle::operator=(const Rectangle& rhs)
 {
 	// Shape data
 	assignShapeData(rhs);
-	
+	std::cout << "boop" << std::endl;
 	return *this;
 }
 

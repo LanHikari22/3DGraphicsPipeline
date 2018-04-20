@@ -34,11 +34,7 @@ void Shape::assignShapeData(const Shape& rhs)
 
 }
 
-Shape& Shape::operator=(const Shape& rhs)
-{
-	assignShapeData(rhs);
-	return *this;
-}
+
 
 void Shape::setSpaceLevel(unsigned int spaceLevel)
 {

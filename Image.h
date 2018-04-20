@@ -10,6 +10,7 @@
 #include "Triangle.h"
 #include "Circle.h"
 #include "Rectangle.h"
+#include "Polygon.h"
 #include "x11context.h"
 #include <vector>
 
