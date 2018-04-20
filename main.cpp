@@ -115,13 +115,11 @@ static void testImage(GraphicsContext *gc)
 	
 	const int CR = GraphicsContext::YELLOW;
 	matrix mr(3,1);
-	mc[0][0] = gc->getWindowWidth()/2;
-	mc[1][0] = gc->getWindowHeight()/2;
-	mc[2][0] = 0;
-//	const int rw = mc[0][0]-200;
-//	const int rh = mc[1][0]-200;
-	const int rw = 1;
-	const int rh = 1;
+	mr[0][0] = gc->getWindowWidth()/2;
+	mr[1][0] = gc->getWindowHeight()/2;
+	mr[2][0] = 0;
+	const int rw = mr[0][0];
+	const int rh = mr[1][0];
 	Shape *sr = new Rectangle(mr, rw, rh, CR);
 	
 	// First, add point shape twice, should display it twice
@@ -180,13 +178,13 @@ static void testImage(GraphicsContext *gc)
 				   & (gc->getPixel(mt[0][1], mt[1][1]) == CT)
 				   & (gc->getPixel(mt[0][2], mt[1][2]) == CT);
 	// Test circle sc vertices
-	verticesDrawn &= (gc->getPixel(mc[0][0], mc[1][0]) == CL)
-				   & (gc->getPixel(mc[0][1], mc[1][1]) == CL);
+	verticesDrawn &= (gc->getPixel(mc[0][1], mc[1][1]) == CC);
 	// Test Rectangle st vertices
 	verticesDrawn &= (gc->getPixel(mr[0][0]-rw/2, mr[1][0]-rh/2) == CR)
-				   & (gc->getPixel(mr[0][1]+rw/2, mr[1][1]-rh/2) == CR)
-				   & (gc->getPixel(mr[0][2]+rw/2, mr[1][2]+rh/2) == CR)
-	   	   	   	   & (gc->getPixel(mr[0][3]-rw/2, mr[1][3]+rh/2) == CR);
+				   & (gc->getPixel(mr[0][0]+rw/2, mr[1][0]-rh/2) == CR)
+				   & (gc->getPixel(mr[0][0]+rw/2, mr[1][0]+rh/2) == CR)
+	   	   	   	   & (gc->getPixel(mr[0][0]-rw/2, mr[1][0]+rh/2) == CR);
+	
 	if (verticesDrawn)
 	{
 		std::cout << "OK!" << std::endl;
@@ -195,7 +193,7 @@ static void testImage(GraphicsContext *gc)
 	}
 	
 	// Operator>>
-	std::cout << "  Testing Operator<<..." << std::endl;
+	std::cout << "  Testing Operator>>..." << std::endl;
 	std::cout << "    Copying img0 to stringstream then to imag1..." << std::endl;
 	std::stringstream ss;
 	Image img2;
@@ -205,7 +203,7 @@ static void testImage(GraphicsContext *gc)
 	std::cout << "    Expected Output: " << *img0 << std::endl;
 	std::cout << "    Actual Output:   " << img2 << std::endl;
 	
-	delete sp;
+//	delete sp;	// Already deleted!
 	delete sl;
 	delete st;
 	delete sc;

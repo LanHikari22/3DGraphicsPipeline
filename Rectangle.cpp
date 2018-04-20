@@ -37,7 +37,7 @@ Rectangle::Rectangle(const matrix &pts, int color)
 	}
 }
 
-Rectangle::Rectangle(const matrix &pts, double h, double w, int color)
+Rectangle::Rectangle(const matrix &pts, double w, double h, int color)
 	: Shape(pts[0][0]-w/2, pts[1][0]-h/2, pts[2][0], color, 4)
 {
 	// Assign p2
@@ -52,7 +52,7 @@ Rectangle::Rectangle(const matrix &pts, double h, double w, int color)
 
 	// Assign z-component to the origin's (no depth change)
 	// And set 4th component to 0 for now
-	for (int c=0; c<4; c++)
+	for (int c=1; c<4; c++)
 	{
 		this->pts[2][c] = pts[2][0];
 		this->pts[3][c] = 0;
