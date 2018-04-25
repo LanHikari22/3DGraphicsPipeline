@@ -2,6 +2,7 @@
 #define MYDRAWING_H
 #include "drawbase.h"
 #include "Image.h"
+#include <vector>
 
 // forward reference
 class GraphicsContext;
@@ -50,11 +51,14 @@ public:
 	// but once a key is released, if an action is associated with it,
 	// it is handled in this method
 	// Commands:
+	// Segment Control Commands:
+	// Key: Z	Action: Advances to rubberband the next segment
 	// Drawing Mode Commands
 	// Key: l	Action: Switch to Line Drawing Mode
 	// Key: t	Action: Switch to Triangle Drawing Mode
 	// Key: r	Action: Switch to Rectangle Drawing Mode
 	// Key: c	Action: Switch to Circle Drawing Mode
+	// Key: p	Action: Switch to Polygon Drawing Mode
 	// Saving Commands
 	// Key: i	Action: Loads saved image (if any)
 	// Key: o	Action: Saves current image
@@ -75,10 +79,12 @@ private:
 
 	// With rubberbanding, regardless of the shape being drawn,
 	// only one segment needs to be remembered
-	int x0;
-	int y0;
-	int x1;
-	int y1;
+	std::vector<int> x;
+	std::vector<int> y;
+	
+	// The number of hypothetical segments drawn.
+	// With a triangle, there are two. Polygons? arbitrary
+	unsigned int numSegments;
 	
 	// flag to know if we are dragging
 	bool dragging;
@@ -96,10 +102,14 @@ private:
 	// with the keyboard events
 	int color;
 	
+	// signal to be set when the user rubber bands the next segment TODO: needed?
+	bool incrementSegments;
+	
+	
 	// Image containing all drawn shapes
 	Image *image;
 	
-	// filename to save to/load from
+	// filename to save to/load from // TODO: how?
 //	static const char * const FILENAME = "Saved_Image.img";
 	
 	
@@ -159,6 +169,13 @@ private:
 	// if store: the constructed shape will be added to the image
 	void drawCircle(GraphicsContext *gc, bool store);
 
+	// Helper method that handles drawing a polygon 
+	// using an arbitrary number of rubberbanded 
+	// segments
+	// x0,y0 -> x1,y1 -> ... -> xn,yn -> x0,y0
+	// if store: the constructed shape will be added to the image
+	void drawPolygon(GraphicsContext *gc, bool store);
+	
 		
 };
 #endif

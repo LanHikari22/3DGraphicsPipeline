@@ -7,13 +7,16 @@
 
 // Constructor
 MyDrawing::MyDrawing() {
-	dragging = false;
-	x0 = x1 = y0 = y1 = 0;
+	dragging = incrementSegments = false;
 	color = GraphicsContext::CYAN;
+	numSegments = 1;
 	// Default mode will be line
 	drawingMode = MyDrawing::DrawingMode::Line;
 	// image to redraw everytime an exposure happens
 	image = new Image();
+	// vectors x and y will need at least 2 points
+	x.push_back(0); x.push_back(0);
+	y.push_back(0); y.push_back(0);
 	return;
 }
 
@@ -47,9 +50,14 @@ void MyDrawing::mouseButtonDown(GraphicsContext * gc, unsigned int button,
 	// - draw shape in XOR mode.  Note, at this point, the hypothetical line is
 	//   degenerate (0 length), but need to do it for consistency
 	
-	// Originally, the hypothetical line is degenerate
-	x0 = x1 = x;
-	y0 = y1 = y;
+	// Originally, the hypothetical line(s) is/are degenerate
+	this->x.clear();
+	this->y.clear();
+	numSegments = 1;	
+	for (int i=0; i<2; i++) {
+		this->x.push_back(x);
+		this->y.push_back(y);
+	}
 	
 	// For drawing and undrawing the shapes
 	gc->setMode(GraphicsContext::MODE_XOR);
@@ -58,6 +66,7 @@ void MyDrawing::mouseButtonDown(GraphicsContext * gc, unsigned int button,
 	const bool store = true;
 	drawShape(gc, !store);
 
+	std::cout << "called mouse down" << std::endl;
 	dragging = true;
 	return;
 }
@@ -68,10 +77,11 @@ void MyDrawing::mouseButtonUp(GraphicsContext * gc, unsigned int button, int x,
 		// undraw old shape
 		const bool store = true;
 		drawShape(gc, !store);
-		
+				
 		// just in x and y here do not match x and y of last mouse move
-		x1 = x;
-		y1 = y;
+		this->x[numSegments] = x;
+		this->y[numSegments] = y;
+		
 		// go back to COPY mode
 		gc->setMode(GraphicsContext::MODE_NORMAL);
 		// new shape drawn in copy mode: actually store shape into image
@@ -89,11 +99,24 @@ void MyDrawing::mouseMove(GraphicsContext * gc, int x, int y) {
 		// old shape undrawn
 		const bool store = true;
 		drawShape(gc, !store);
+		
+		// When releasing the increment segments key, this activates // TODO: debug?
+		if (incrementSegments) {
+			numSegments++;
+			std::cout << "numSegments: " << numSegments << std::endl;
+			this->x.push_back(this->x[numSegments-1]);
+			this->y.push_back(this->x[numSegments-1]);
+			incrementSegments = false;
+		}
+
+		
 		// update
-		x1 = x;
-		y1 = y;
+		this->x[numSegments] = x;
+		this->y[numSegments] = y;
+
 		// new shape drawn
 		drawShape(gc, !store);
+		
 	}
 	return;
 }
@@ -101,11 +124,16 @@ void MyDrawing::mouseMove(GraphicsContext * gc, int x, int y) {
 
 void MyDrawing::keyUp(GraphicsContext* gc, unsigned int keycode)
 {
-
-	if (dragging) {
-		throw drawingException("Cannot initiate an action while dragging");
+	if (dragging && drawingMode == MyDrawing::DrawingMode::Polygon 
+			&& (char)keycode == 'z') {
+		incrementSegments = true;
+	}
+	else if (dragging) {
+		throw drawingException("Cannot initiate an action while dragging (unless in polygon mode)");
 	}
 
+	std::cout << "keycode: '" << (char)keycode << "'" << std::endl;
+	
 	handleModeCommands(gc, keycode);
 	handleFileCommands(gc, keycode);
 	handleColorCommands(gc, keycode);
@@ -128,6 +156,11 @@ void MyDrawing::handleModeCommands(GraphicsContext* gc, unsigned int keycode) {
 		break;
 	case 'c':
 		drawingMode = MyDrawing::DrawingMode::Circle;
+		break;
+	case 'p':
+		drawingMode = MyDrawing::DrawingMode::Polygon;
+		break;
+	default:
 		break;
 	}
 }
@@ -154,6 +187,8 @@ void MyDrawing::handleFileCommands(GraphicsContext* gc, unsigned int keycode) {
 		ofs.close();
 	}
 	break;
+	default:
+		break;
 	}
 }
 
@@ -187,7 +222,7 @@ void MyDrawing::drawShape(GraphicsContext * gc, bool store) {
 		}
 		break;
 		case MyDrawing::DrawingMode::Polygon: {
-			std::cout << "Draw me!" << std::endl; // TODO: please
+			drawPolygon(gc, store);
 		}
 		break;
 		default:
@@ -199,8 +234,8 @@ void MyDrawing::drawLine(GraphicsContext * gc, bool store) {
 	
 	// startpoint and endpoint
 	matrix m(3,3);
-	m[0][0] = x0;	m[0][1] = x1;
-	m[1][0] = y0;	m[1][1] = y1;
+	m[0][0] = x[0];	m[0][1] = x[1];
+	m[1][0] = y[0];	m[1][1] = y[1];
 	m[2][0] = 0;	m[2][1] = 0;
 	
 	// Draw the triangle
@@ -215,14 +250,14 @@ void MyDrawing::drawLine(GraphicsContext * gc, bool store) {
 
 void MyDrawing::drawTriangle(GraphicsContext * gc, bool store) {
 	// Define the triangle to be contained in the hypothetical box
-	double w = x1 - x0;
+	int w = x[1] - x[0];
 	
 	// p1 would be on the lower left corner
 	// p2 in the upper middle
 	// p3 in the lower right corner
 	matrix m(3,3);
-	m[0][0] = x0;	m[0][1] = x0+w/2;	m[0][2] = x1;
-	m[1][0] = y1;	m[1][1] = y0;		m[1][2] = y1;
+	m[0][0] = x[0];	m[0][1] = x[0]+w/2;	m[0][2] = x[1];
+	m[1][0] = y[1];	m[1][1] = y[0];		m[1][2] = y[1];
 	m[2][0] = 0;	m[2][1] = 0;		m[2][2] = 0;
 	
 	// Draw the triangle
@@ -236,13 +271,13 @@ void MyDrawing::drawTriangle(GraphicsContext * gc, bool store) {
 
 void MyDrawing::drawRectangle(GraphicsContext *gc, bool store) {
 	// Define the rectangle to be the hypothetical box
-	double w = x1 - x0;
-	double h = y1 - y0;
+	int w = x[1] - x[0];
+	int h = y[1] - y[0];
 	
 	// Its origin will be halfway from p0 and p1
 	matrix m(3,1);
-	m[0][0] = x0 + w/2;
-	m[1][0] = y0 + h/2;
+	m[0][0] = x[0] + w/2;
+	m[1][0] = y[0] + h/2;
 	m[2][0] = 0;
 	
 	// Draw the rectangle
@@ -256,15 +291,15 @@ void MyDrawing::drawRectangle(GraphicsContext *gc, bool store) {
 
 void MyDrawing::drawCircle(GraphicsContext * gc, bool store) {
 	// width/height of the hypothetical box formed by the segment
-	double w = x1 - x0;
-	double h = y1 - y0;
+	int w = x[1] - x[0];
+	int h = y[1] - y[0];
 	
 	// Its origin will be halfway from p0 and p1
 	// column two is a point on the circle; (r,0,0)
 	matrix m(3,2);
-	m[0][0] = x0 + w/2;	m[0][1] = x1;
-	m[1][0] = y0 + h/2; m[1][1] = y1;
-	m[2][0] = 0;		m[2][1] = 0;
+	m[0][0] = x[0] + w/2;	m[0][1] = x[1];
+	m[1][0] = y[0] + h/2; 	m[1][1] = y[1];
+	m[2][0] = 0;			m[2][1] = 0;
 	
 	// Draw the circle
 	Circle c(m, color);
@@ -272,5 +307,31 @@ void MyDrawing::drawCircle(GraphicsContext * gc, bool store) {
 	
 	if (store) {
 		image->add(&c);
+	}
+}
+
+void MyDrawing::drawPolygon(GraphicsContext * gc, bool store) {
+	
+	// connect all the vertices in vect x, y together!
+	matrix m(3,numSegments+1);
+	for (unsigned int c=0; c<numSegments+1; c++) {
+		m[0][c] = x[c];
+		m[1][c] = y[c];
+		m[2][c] = 0;
+	}
+	
+	std::cout << m << std::endl;
+	
+	// Try to draw a polygon, if possible...
+	try {
+		// Draw the Polygon
+		Polygon p(numSegments+1, m, color);
+		p.draw(gc);
+		if (store) {
+			image->add(&p);
+		}
+	} catch (shapeException) {
+		// Nope! Degenerate polygon! just draw a line
+		drawLine(gc, store);
 	}
 }
