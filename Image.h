@@ -17,7 +17,8 @@
 class Image {
 	// container for shape pointers: anything that extends Shape can be here
 	std::vector<Shape*> shapes;
-	// Additional amount of space padding to insert to each shape. Helps printing good output
+	// Additional amount of space padding to insert to each shape. Helps printing good 
+	// output
 	unsigned int spaceLevel;
 
 public:
@@ -58,7 +59,8 @@ public:
 	std::istream& in(std::istream &is);
 	
 	// removes all shapes from memory, and deallocates dynamic objects in the Image
-	// this destructor logic can be used in the destructor, but also the assignment operator
+	// this destructor logic can be used in the destructor, but also the assignment 
+	// operator
 	void erase();
 };
 

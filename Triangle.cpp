@@ -66,7 +66,8 @@ void Triangle::out(std::ostream & os) const
 	// output shape-specific data
 	Shape::out(os);
 	
-	// compute the string for a new Line, spaceLevel accounts for if previous level was tabbed
+	// compute the string for a new Line, spaceLevel accounts for if previous level 
+	// was tabbed
 	std::string LineTab(sizeof("s(color=0xFFFFFF ")-1 + this->spaceLevel, ' ');
 
 	// output p2 and p3

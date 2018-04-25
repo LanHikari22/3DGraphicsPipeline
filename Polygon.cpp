@@ -11,10 +11,12 @@ Polygon::Polygon(const matrix &pts, int color)
 { }
 
 Polygon::Polygon(unsigned int numColumns, const matrix &pts, int color)
-	: Shape(pts[0][0], pts[1][0], pts[2][0], color, numColumns*Polygon::CAPACITY_MULTIPLIER), 
+	: Shape(pts[0][0], pts[1][0], pts[2][0], color, 
+			numColumns*Polygon::CAPACITY_MULTIPLIER), 
 	  numColumns(numColumns), columnCapacity(numColumns*Polygon::CAPACITY_MULTIPLIER)
 {	
-	// assign numColumns points. matrix is assumed 3xnumColumns (or bigger), otherwise this fails
+	// assign numColumns points. matrix is assumed 3xnumColumns (or bigger), 
+	// otherwise this fails
 	for (unsigned int c=0; c<numColumns; c++)
 	{
 		this->pts[0][c] = pts[0][c];
@@ -39,7 +41,8 @@ void Polygon::updateColumnCapacity()
 	if (numColumns >= columnCapacity)
 	{
 		matrix newMatrix(4, columnCapacity*Polygon::CAPACITY_MULTIPLIER);
-		columnCapacity *= Polygon::CAPACITY_MULTIPLIER; // Ay! Bigger Capacity for more adds!
+		// Ay! Bigger Capacity for more adds!
+		columnCapacity *= Polygon::CAPACITY_MULTIPLIER; 
 		// copy old content
 		for (int r=0; r<4; r++)
 		{
@@ -94,7 +97,8 @@ void Polygon::draw(GraphicsContext* gs) const
 	// polygon needs to at least be a triangle!
 	if (numColumns < 3)
 	{
-		throw shapeException("Less than 3 points: Polygon needs to at least be a triangle");
+		throw shapeException("Less than 3 points: Polygon needs to " \
+				"at least be a triangle");
 
 	}
 	
@@ -120,7 +124,8 @@ void Polygon::out(std::ostream & os) const
 	Shape::out(os);
 	
 	
-	// compute the string for a new Line, spaceLevel accounts for if previous level was tabbed
+	// compute the string for a new Line, spaceLevel accounts for if 
+	// previous level was tabbed
 	std::string LineTab(sizeof("s(color=0xFFFFFF ")-1 + this->spaceLevel, ' ');
 	
 	// output vertices

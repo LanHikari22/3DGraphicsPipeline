@@ -12,7 +12,8 @@ class Line : public Shape {
 public:
 	
 	// A line contains two points: a startpoint and endpoint.
-	// @param pts 3x2 matrix consisting of a startpoint column and an endpoint column of [x y z]'
+	// @param pts 3x2 matrix consisting of a startpoint column and an endpoint 
+	// column of [x y z]'
 	// @param color RGB representation of the color of the shape, each color is a byte.	
 	// @throws matrixException if the matrix is not 3x2 (or bigger)
 	Line(const matrix &pts, int color);
@@ -34,7 +35,8 @@ public:
 	// @throws shapeException if z-component is non-zero. 3D drawing not supported yet.
 	virtual void draw(GraphicsContext* gs) const;
 
-	// This implementation extends on the output of the Shape class by specifying the shape type,
+	// This implementation extends on the output of the Shape class by specifying 
+	// the shape type,
 	// and simply closing the parenthesis to signify the end of the output report.
 	// Output Format: 
 	// "p(color=<RGB_int> p1=[<x1> <y1> <z1>]' 
@@ -42,7 +44,8 @@ public:
 	// @param os The output stream to insert into to
 	virtual void out(std::ostream & os) const;
 	
-	// Default implementation will be able to read color and location, pts, from istream into object.
+	// Default implementation will be able to read color and location, pts, 
+	// from istream into object.
 	// This should be overriden by derived classes to parse any additional data.
 	// Input Format:
 	// "(color=<RGB_int> p1=[<x1> <y1> <z1>]' 

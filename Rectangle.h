@@ -22,10 +22,11 @@ public:
 	
 	// A rectangle represented as a 3x1 matrix, a column vector of the origin
 	// and the height and width of the rectangle
+	// The origin is the center of the rectangle.
 	// @param pts 3x1 matrix consisting of 1 column vectors of [x y z]'
 	// @param color RGB representation of the color of the shape, each color is a byte.	
 	// @throws matrixException if the matrix is not 3x1 (or bigger)
-	Rectangle(const matrix &pts, double h, double w, int color);
+	Rectangle(const matrix &pts, double w, double h, int color);
 	
 	// Copy constructor for the Rectangle class
 	// It builds on top of the copy constructor of the shape class
@@ -41,10 +42,12 @@ public:
 	
 	// This sets the GraphicsContext color to the shape's color 
 	// and draws the Rectangle by drawing 4 segments using the GraphicsContext pointer
-	// @throws shapeException if any z-component is non-zero. 3D Drawing not supported yet
+	// @throws shapeException if any z-component is non-zero. 
+	// 3D Drawing not supported yet
 	virtual void draw(GraphicsContext* gs) const;
 
-	// This implementation extends on the output of the Shape class by specifying the shape type,
+	// This implementation extends on the output of the Shape class by specifying 
+	// the shape type,
 	// and simply closing the parenthesis to signify the end of the output report.
 	// Output Format: 
 	// "r(color=<RGB_int> p1=[<x1> <y1> <z1>]' 
@@ -54,7 +57,8 @@ public:
 	// @param os The output stream to insert into to
 	virtual void out(std::ostream & os) const;
 	
-	// Default implementation will be able to read color and location, pts, from istream into object.
+	// Default implementation will be able to read color and location, pts, 
+	// from istream into object.
 	// This should be overriden by derived classes to parse any additional data.
 	// Input Format:
 	// "(color=<RGB_int> p1=[<x1> <y1> <z1>]' 

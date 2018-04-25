@@ -73,7 +73,8 @@ std::ostream& Image::out(std::ostream &os) const
 	
 	for (unsigned int i=0; i<shapes.size(); i++)
 	{
-		// set the space level for each shape in case the output is appended to extra text
+		// set the space level for each shape in case the output is appended to 
+		// extra text
 		shapes[i]->setSpaceLevel(this->spaceLevel);
 
 		os << *shapes[i];
@@ -91,6 +92,9 @@ std::ostream& Image::out(std::ostream &os) const
 
 std::istream& Image::in(std::istream &is)
 {
+	// clear image, since new data is being input
+	this->erase();
+	
 	// parse in a character to determine type
 	char shapeSpecifier = '\0';
 	

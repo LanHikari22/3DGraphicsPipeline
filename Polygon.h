@@ -63,11 +63,14 @@ public:
 	
 	// This sets the GraphicsContext color to the shape's color 
 	// and draws the Polygon by drawing n segments using the GraphicsContext pointer
-	// @throws shapeException if any z-component is non-zero. 3D Drawing not supported yet
-	// @throws shapeException if numColumns < 3. A polygon needs to AT LEAST be a triangle
+	// @throws shapeException if any z-component is non-zero. 
+	// 3D Drawing not supported yet
+	// @throws shapeException if numColumns < 3. 
+	// A (non-degenerate) polygon needs to AT LEAST be a triangle
 	virtual void draw(GraphicsContext* gs) const;
 
-	// This implementation extends on the output of the Shape class by specifying the shape type,
+	// This implementation extends on the output of the Shape class 
+	// by specifying the shape type,
 	// and simply closing the parenthesis to signify the end of the output report.
 	// Output Format: 
 	// "r(color=<RGB_int> p1=[<x1> <y1> <z1>]' 
@@ -77,7 +80,8 @@ public:
 	// @param os The output stream to insert into to
 	virtual void out(std::ostream & os) const;
 	
-	// Default implementation will be able to read color and location, pts, from istream into object.
+	// Default implementation will be able to read color and location, pts, 
+	// from istream into object.
 	// This should be overriden by derived classes to parse any additional data.
 	// Input Format:
 	// "(color=<RGB_int> p1=[<x1> <y1> <z1>]' 

@@ -1,6 +1,7 @@
 // @author Mohammed Alzakariya
 // @file Shape.h
-// This file provides declarations for the abstract Shape class which is derived by several other shapes
+// This file provides declarations for the abstract Shape class 
+// which is derived by several other shapes
 // It also contains global overloads of operator<< and operator>> for the class
 
 #ifndef SHAPE_H
@@ -13,7 +14,7 @@
 #include <stdexcept>	// for std::runtime_error
  
 // a helper class to bundle a message with any thrown exceptions.
-// To use, simply 'throw matrixException("A descriptive message about
+// To use, simply 'throw shapeException("A descriptive message about
 // the problem")'.  This will throw the exception object by value.
 // Recommendation is to catch by reference (to prevent slicing).
 class shapeException:public std::runtime_error
@@ -30,8 +31,10 @@ protected:
 	// RGB representation of the color of the shape
 	int color;
 	
-	// points matrix: 4xn matrix; set to the transpose of [X Y Z 1.0]. (TODO: 1.0 for now)
-	// In the Shape abstract class it's 4x1, but it makes sense to extend it to n columns
+	// points matrix: 4xn matrix; set to the transpose of [X Y Z 1.0]. 
+	// (TODO: 1.0 for now)
+	// In the Shape abstract class it's 4x1, but it makes sense to extend 
+	// it to n columns
 	// for n points in the shape.
 	matrix pts;
 	
@@ -41,7 +44,8 @@ protected:
 	// someText:         This is line 1.
 	// [xxxxxxx][-------]This is line 2. ([xxxx]: Specified extra padding)
 	// [xxxxxxx] would be the specified extra padding: spaceLevel.
-	// Tabs can certainly mess this process, so if tabs are used, the tab to space equivalent is
+	// Tabs can certainly mess this process, so if tabs are used, 
+	// the tab to space equivalent is
 	// expected to be accounted for.
 	unsigned int spaceLevel;
 	
@@ -69,22 +73,27 @@ public:
 	
 	// For now, this can only handle drawing in 2D.
 	// a concrete class defines the exact mechanisms of drawing this
-	// It should throw a shapeException if the z component is non-zero while trying to draw.
+	// It should throw a shapeException if the z component is non-zero while trying 
+	// to draw.
 	virtual void draw(GraphicsContext* gs) const = 0;
 	
-	// the amoount of space padding to put in a second line when outputting to a stream
+	// the amoount of space padding to put in a second line when outputting to a 
+	// stream
 	void setSpaceLevel(unsigned int spaceLevel);
 	
 	// Default implementation of this will print the color and location, pts.
-	// However, it should be overriden by derived classes to display data concrete to those classes
+	// However, it should be overriden by derived classes to display data concrete to 
+	// those classes
 	// Output Format: "color=<RGB_int> p1= [<x1> <y1> <z1> <a1>]'"
 	// @param os The output stream to insert into to
 	virtual void out(std::ostream & os) const;
 	
-	// Default implementation will be able to read color and location, pts, from istream into object.
+	// Default implementation will be able to read color and location, pts, 
+	// from istream into object.
 	// This should be overriden by derived classes to parse any additional data.
 	// Input Format: "(color=<RGB_int> p1= [<x1> <y1> <z1> <a1>]'"
-	// If a character comes before the '(' to signify shape type, it is ignored by this
+	// If a character comes before the '(' to signify shape type, it is 
+	// ignored by this
 	// parsing function.
 	// @param is The input stream to parse from
 	// @throws shapeException for invalid format

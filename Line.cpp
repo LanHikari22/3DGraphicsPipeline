@@ -8,7 +8,8 @@
 Line::Line(const matrix &pts, int color)
 	: Shape(pts[0][0], pts[1][0], pts[2][0], color, 2)
 { 
-	// assign startpoint and endpoint. matrix is assumed 3x2 (or bigger), otherwise this fails
+	// assign startpoint and endpoint. matrix is assumed 3x2 (or bigger), 
+	// otherwise this fails
 	for (int r=0; r<3; r++)
 	{
 		for (int c=0; c<2; c++)
@@ -61,7 +62,8 @@ void Line::out(std::ostream & os) const
 	// output shape-specific data
 	Shape::out(os);
 	
-	// compute the string for a new line, spaceLevel accounts for if previous level was tabbed
+	// compute the string for a new line, spaceLevel accounts for if previous 
+	// level was tabbed
 	std::string lineTab(sizeof("s(color=0xFFFFFF ")-1 + this->spaceLevel, ' ');
 
 	// output endpoint
@@ -90,7 +92,8 @@ void Line::in(std::istream & is)
 	is >> cskip;
 	if (cskip != 'p')
 	{
-		throw shapeException("Invalid shape Format: Expected endpoint after start point...");
+		throw shapeException("Invalid shape Format: Expected endpoint after " \
+				"start point...");
 	}
 	is.ignore(sizeof("1=[")-1);
 	

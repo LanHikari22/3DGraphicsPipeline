@@ -73,7 +73,6 @@ Rectangle& Rectangle::operator=(const Rectangle& rhs)
 {
 	// Shape data
 	assignShapeData(rhs);
-	std::cout << "boop" << std::endl;
 	return *this;
 }
 
@@ -110,7 +109,8 @@ void Rectangle::out(std::ostream & os) const
 	// output shape-specific data
 	Shape::out(os);
 	
-	// compute the string for a new Line, spaceLevel accounts for if previous level was tabbed
+	// compute the string for a new Line, spaceLevel accounts for if previous level 
+	// was tabbed
 	std::string LineTab(sizeof("s(color=0xFFFFFF ")-1 + this->spaceLevel, ' ');
 
 	// output vertices
