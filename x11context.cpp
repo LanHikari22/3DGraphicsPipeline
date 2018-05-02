@@ -199,16 +199,16 @@ int X11Context::getWindowHeight()
 }
 
 // leave these out for now
-//void X11Context::drawLine(int x1, int y1, int x2, int y2)
-//{
-//	XDrawLine(display, window, graphics_context, x1, y1, x2, y2);		
-//	XFlush(display);
-//}
+void X11Context::drawLine(int x1, int y1, int x2, int y2)
+{
+	XDrawLine(display, window, graphics_context, x1, y1, x2, y2);		
+	XFlush(display);
+}
 
-//void X11Context::drawCircle(int x, int y, int radius)
-//{
-//	XDrawArc(display, window, graphics_context, x-radius,
-//				 y-radius, radius*2, radius*2, 0, 360*64);
-//	XFlush(display);
-//}
+void X11Context::drawCircle(int x, int y, int radius)
+{
+	XDrawArc(display, window, graphics_context, x-radius,
+				 y-radius, radius*2, radius*2, 0, 360*64);
+	XFlush(display);
+}
 

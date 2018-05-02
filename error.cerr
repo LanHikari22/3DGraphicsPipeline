@@ -1,25 +1,3 @@
-g++ -c -Wall main.cpp -o main.o
-g++ -MM -c -Wall main.cpp > main.d
-g++ -c -Wall gcontext.cpp -o gcontext.o
-g++ -MM -c -Wall gcontext.cpp > gcontext.d
-g++ -c -Wall x11context.cpp -o x11context.o
-g++ -MM -c -Wall x11context.cpp > x11context.d
-g++ -c -Wall Shape.cpp -o Shape.o
-g++ -MM -c -Wall Shape.cpp > Shape.d
-g++ -c -Wall Point.cpp -o Point.o
-g++ -MM -c -Wall Point.cpp > Point.d
-g++ -c -Wall Line.cpp -o Line.o
-g++ -MM -c -Wall Line.cpp > Line.d
-g++ -c -Wall Triangle.cpp -o Triangle.o
-g++ -MM -c -Wall Triangle.cpp > Triangle.d
-g++ -c -Wall Circle.cpp -o Circle.o
-g++ -MM -c -Wall Circle.cpp > Circle.d
-g++ -c -Wall Rectangle.cpp -o Rectangle.o
-g++ -MM -c -Wall Rectangle.cpp > Rectangle.d
-g++ -c -Wall Polygon.cpp -o Polygon.o
-g++ -MM -c -Wall Polygon.cpp > Polygon.d
-g++ -c -Wall Image.cpp -o Image.o
-g++ -MM -c -Wall Image.cpp > Image.d
-g++ -c -Wall matrix.cpp -o matrix.o
-g++ -MM -c -Wall matrix.cpp > matrix.d
-g++ main.o gcontext.o x11context.o Shape.o Point.o Line.o Triangle.o Circle.o Rectangle.o Polygon.o Image.o matrix.o -lX11 -o image
+g++ -c -Wall ViewContext.cpp -o ViewContext.o
+g++ -MM -c -Wall ViewContext.cpp > ViewContext.d
+g++ main.o gcontext.o x11context.o mydrawing.o Shape.o Point.o Line.o Triangle.o Circle.o Rectangle.o Polygon.o Image.o matrix.o ViewContext.o -lX11 -o view
