@@ -48,13 +48,13 @@ void Image::add(const Shape *s)
 	shapes.push_back(s->clone());
 }
 
-void Image::draw(GraphicsContext *gs)
+void Image::draw(GraphicsContext *gc, ViewContext *vc)
 {
 	// draw all shapes!
 	std::vector<Shape*>::const_iterator it;
 	for (it = shapes.begin(); it != shapes.end(); it++)
 	{
-		(*it)->draw(gs);
+		(*it)->draw(gc, vc);
 	}
 }
 

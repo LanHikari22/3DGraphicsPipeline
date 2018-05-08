@@ -19,7 +19,6 @@ class viewContextException:public std::runtime_error
 		               message).c_str()) {}
 };
 
-
 class ViewContext {
 public:
 	// default constructor -- sets the composite matrix and its
@@ -29,7 +28,8 @@ public:
 	// The reset state of the composite matrix allows for converion
 	// between the cartesian system of the model, and the device.
 	// @param modelHeight this is needed for the cartesian conversion
-	ViewContext(double modelHeight);
+	// @param modelWidth width dimension of the model to get total dimensions
+	ViewContext(double modelHeight, double modelWidth);
 		
 	// Computes a  point as it would appear on the device, given its value
 	// in the model.
@@ -70,12 +70,16 @@ public:
 	
 	// Rotates the view using the configured rotation matrix
 	// This Transforms the composite matrix and recomputes its inverse
-	void rotate();
+	void rotate(bool cw=true);
 	
 	// Scales the matrix up or down using the configured zoom matrix
 	// This Transforms the composite matrix and recomputes its inverse
-	void zoom();
+	void zoom(bool in=true);
 
+	// This will update the composite by applying the amount of
+	// net translation, then net rotation, then net zoom
+	void updateComposite();
+	
 	// This resets the composite matrix to its original state
 	// As well as the inverse matrix. Which is a transformation from
 	// a cartesian system with the origin in the middle, y up to
@@ -94,18 +98,29 @@ public:
 	
 	// 2D only -- recomputes and sets the rotation matrix and its inverse
 	// for effecient usage when applied
-	// @param angle from x=0 towards y+
-	// @params (x,y,z) point of rotation. Default: origin
+	// @param angle (deg) from x=0 towards y+
+	// @params (x,y,z) MODEL point of rotation. Default: origin
 	void configRotation(double angle, double x=0, double y=0, double z=0);
 	
 	// recomputes and sets zoom matrix and its inverse
 	// so it can be quickly applied when the zoom method is called.
 	// @param multiplier the amount to scale. Must be positive.
-	// @params (x,y,z) the origin to zoom with respect to
+	// @params (x,y,z) the MODEL center to zoom with respect to
 	// @throws viewContextException if multiplier is less or equal to zero
 	void configZoom(double multiplier, double x=0, double y=0, double z=0);
 	
 private:	
+	
+	// internal function that computes a translation matrix
+	matrix computeTranslation(double dx, double dy, double dz=0);
+	
+	// internal function that computes a rotation matrix
+	// x,y,z represent the center of rotation, and angle is in radians
+	matrix computeRotation(double angle, double x=0, double y=0, double z=0);
+	
+	// internal function that computes a scale matrix
+	matrix computeZoom(double multiplier, double x=0, double y=0, double z=0);
+	
 	// composite matrix used to transform a point
 	// from model coordinates to device coordinates
 	// initially set to transform from center origin, y up
@@ -143,8 +158,21 @@ private:
 	// inverse composite matrix
 	matrix scaleInv;
 	
+	// the total amount of translation to be applied to the composite matrix
+	double netTranslation;
+
+	// represents the amount of rotation applied in radians to the composite
+	double netRotation;	
+
+	// represents the net amount of zooming applied to the composite matrix
+	double netZoom;
+	
 	// The height of the model, repersenting the maximum y coordinate in it
 	const double modelHeight;
+	
+	// the width of the model
+	const double modelWidth;
+
 		
 };
 

@@ -22,7 +22,7 @@ Polygon::Polygon(unsigned int numColumns, const matrix &pts, int color)
 		this->pts[0][c] = pts[0][c];
 		this->pts[1][c] = pts[1][c];
 		this->pts[2][c] = pts[2][c];
-		this->pts[3][c] = 0; // This is defaulted to zero for now
+		this->pts[3][c] = 1; // 1 for translation
 	}
 }
 
@@ -81,7 +81,7 @@ Polygon& Polygon::operator=(const Polygon& rhs)
 	return *this;
 }
 
-void Polygon::draw(GraphicsContext* gs) const
+void Polygon::draw(GraphicsContext *gc, ViewContext *vc) const
 {
 	// Make sure all z components is zero. 3D is not supported yet...
 	bool zeroZ = true;
@@ -103,14 +103,19 @@ void Polygon::draw(GraphicsContext* gs) const
 	}
 	
 	// set the color to the shape's
-	gs->setColor(this->color);
+	gc->setColor(this->color);
+		
+	// convert to device coordinates
+	matrix devPts = vc->modelToDevice(this->pts);
+	
 	
 	// utilize the line drawing algorithm in GraphicsContext
 	// This is fun! connect all vertices together!
 	for (unsigned int c=0; c<numColumns; c++)
 	{
 		int nextC = (c+1) % numColumns;
-		gs->drawLine(pts[0][c], pts[1][c], pts[0][nextC], pts[1][nextC]);
+		gc->drawLine(devPts[0][c], devPts[1][c], 
+				devPts[0][nextC], devPts[1][nextC]);
 	}
 	
 }

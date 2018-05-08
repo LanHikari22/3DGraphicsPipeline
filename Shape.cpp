@@ -13,7 +13,7 @@ Shape::Shape(double x, double y, double z, int color, int numPoints)
 	pts[0][0] = x;
 	pts[1][0] = y;
 	pts[2][0] = z;
-	pts[3][0] = 1.0; // TODO: for now.
+	pts[3][0] = 1.0;
 }
 
 Shape::Shape(const Shape &s)

@@ -31,9 +31,10 @@ public:
 	
 	// This sets the GraphicsContext color to the shape's color 
 	// and draws the triangle by drawing 3 segments using the GraphicsContext pointer
+	// and the ViewContext pointer
 	// @throws shapeException if any z-component is non-zero. 3D Drawing not supported 
 	// yet
-	virtual void draw(GraphicsContext* gs) const;
+	virtual void draw(GraphicsContext *gc, ViewContext *vc) const;
 
 	// This implementation extends on the output of the Shape class by specifying 
 	// the shape type,

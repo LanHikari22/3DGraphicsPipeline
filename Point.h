@@ -30,9 +30,9 @@ public:
 	
 	// This sets the GraphicsContext color to the shape's color 
 	// and draws a point at the point object's coordinates using the 
-	// passed GraphicsContext pointer
+	// passed GraphicsContext pointer and ViewContext pointer
 	// @throws shapeException if z-component is non-zero. 3D drawing not supported yet.
-	virtual void draw(GraphicsContext* gs) const;
+	virtual void draw(GraphicsContext *gc, ViewContext *vc) const;
 
 	// This implementation extends on the output of the Shape class 
 	// by specifying the shape type,

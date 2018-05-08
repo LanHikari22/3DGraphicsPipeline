@@ -45,8 +45,9 @@ public:
 	void add(const Shape *s);
 	
 	// Invokes the draw() method of all shape objects within the shapes container
-	// @param gs Pointer to GraphicsContext used for drawing
-	void draw(GraphicsContext *gs);
+	// @param gc Pointer to GraphicsContext used for drawing
+	// @param vc Pointer to ViewContext used to convert to device coordinates
+	void draw(GraphicsContext *gc, ViewContext *vc);
 	
 	// Configures output for Extra space padding to generate output
 	// that does not begin at the start of a line

@@ -41,7 +41,7 @@ Circle& Circle::operator=(const Circle& rhs)
 	return *this;
 }
 
-void Circle::draw(GraphicsContext* gs) const
+void Circle::draw(GraphicsContext *gc, ViewContext *vc) const
 {
 	// Make sure the z component is zero. 3D is not supported yet...
 	if (pts[2][0] != 0 || pts[2][1] != 0)
@@ -50,11 +50,14 @@ void Circle::draw(GraphicsContext* gs) const
 	}
 
 	// set the color to the shape's
-	gs->setColor(this->color);
+	gc->setColor(this->color);
+	
+	// Convert to device coordinates
+	matrix devPts = vc->modelToDevice(this->pts);
 	
 	// Compute the radius...
-	double dx = (pts[0][0] - pts[0][1]);
-	double dy = (pts[1][0] - pts[1][1]);
+	double dx = (devPts[0][0] - devPts[0][1]);
+	double dy = (devPts[1][0] - devPts[1][1]);
 	// Check if one of them is zero. Please no sqrt!
 	double r;
 	if (dx == 0) r = std::abs(dy);
@@ -62,7 +65,7 @@ void Circle::draw(GraphicsContext* gs) const
 	else r = std::sqrt(dx*dx + dy*dy);
 	
 	// utilize Circle drawing algorithm in GraphicsContext
-	gs->drawCircle(this->pts[0][0], this->pts[1][0], r);
+	gc->drawCircle(devPts[0][0], devPts[1][0], r);
 }
 
 void Circle::out(std::ostream & os) const

@@ -26,7 +26,7 @@ Point& Point::operator=(const Point& rhs)
 	return *this;
 }
 
-void Point::draw(GraphicsContext* gs) const
+void Point::draw(GraphicsContext *gc, ViewContext *vc) const
 {
 	// Make sure the z component is zero. 3D is not supported yet...
 	if (pts[2][0] != 0)
@@ -34,9 +34,10 @@ void Point::draw(GraphicsContext* gs) const
 		throw shapeException("3D Drawing Not implemented yet");
 	}
 	
-	// simply set the color and draw a pixel at the origin of the shape
-	gs->setColor(this->color);
-	gs->setPixel(this->pts[0][0], this->pts[1][0]);
+	// Set the color and draw the device converted point
+	gc->setColor(this->color);
+	matrix devPts = vc->modelToDevice(this->pts);
+	gc->setPixel(devPts[0][0], devPts[1][0]);
 }
 
 void Point::out(std::ostream & os) const

@@ -10,6 +10,7 @@
 #include <iostream>
 #include "matrix.h"
 #include "x11context.h"
+#include "ViewContext.h"
 
 #include <stdexcept>	// for std::runtime_error
  
@@ -74,8 +75,9 @@ public:
 	// For now, this can only handle drawing in 2D.
 	// a concrete class defines the exact mechanisms of drawing this
 	// It should throw a shapeException if the z component is non-zero while trying 
-	// to draw.
-	virtual void draw(GraphicsContext* gs) const = 0;
+	// to draw. The ViewContext pointer is used to convert from model to
+	// device coordinates.
+	virtual void draw(GraphicsContext *gc, ViewContext *vc) const = 0;
 	
 	// the amoount of space padding to put in a second line when outputting to a 
 	// stream

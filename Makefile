@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -Wall
+CFLAGS= -g -c -Wall
 LDFLAGS= -lX11
 SOURCES=main.cpp gcontext.cpp x11context.cpp mydrawing.cpp Shape.cpp Point.cpp  \
 Line.cpp Triangle.cpp Circle.cpp Rectangle.cpp Polygon.cpp Image.cpp matrix.cpp \

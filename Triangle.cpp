@@ -16,7 +16,7 @@ Triangle::Triangle(const matrix &pts, int color)
 			this->pts[r][c] = pts[r][c];
 		}
 	}
-	// default row 3 is 1.0 for now (component 4)
+	// default row 3 is 1.0 for translation
 	this->pts[3][0] = 1.0;
 	this->pts[3][1] = 1.0;
 	this->pts[3][2] = 1.0;
@@ -39,7 +39,7 @@ Triangle& Triangle::operator=(const Triangle& rhs)
 	return *this;
 }
 
-void Triangle::draw(GraphicsContext* gs) const
+void Triangle::draw(GraphicsContext *gc, ViewContext *vc) const
 {
 	// Make sure all z components is zero. 3D is not supported yet...
 	if (pts[2][0] != 0 || pts[2][1] != 0 || pts[2][2] != 0)
@@ -48,13 +48,16 @@ void Triangle::draw(GraphicsContext* gs) const
 	}
 	
 	// set the color to the shape's
-	gs->setColor(this->color);
+	gc->setColor(this->color);
+	
+	// Convert to device coordinates
+	matrix devPts = vc->modelToDevice(this->pts);
 	
 	// utilize the line drawing algorithm in GraphicsContext
 	// connect all three vertices together
-	gs->drawLine(this->pts[0][0], this->pts[1][0], this->pts[0][1], this->pts[1][1]);
-	gs->drawLine(this->pts[0][1], this->pts[1][1], this->pts[0][2], this->pts[1][2]);
-	gs->drawLine(this->pts[0][2], this->pts[1][2], this->pts[0][0], this->pts[1][0]);
+	gc->drawLine(devPts[0][0], devPts[1][0], devPts[0][1], devPts[1][1]);
+	gc->drawLine(devPts[0][1], devPts[1][1], devPts[0][2], devPts[1][2]);
+	gc->drawLine(devPts[0][2], devPts[1][2], devPts[0][0], devPts[1][0]);
 
 }
 

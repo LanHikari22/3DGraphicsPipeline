@@ -6,6 +6,7 @@
 
 // forward reference
 class GraphicsContext;
+class ViewContext;
 
 // a helper class to bundle a message with any thrown exceptions.
 // To use, simply 'throw drawingException("A descriptive message about
@@ -15,20 +16,21 @@ class drawingException:public std::runtime_error
 {
 	public:
 		drawingException(std::string message):
-		      std::runtime_error((std::string("Shape Exception: ") + 
+		      std::runtime_error((std::string("Drawing Exception: ") + 
 		               message).c_str()) {}
 };
 
 
 class MyDrawing: public DrawingBase {
 public:
-	// Constructor
-	MyDrawing();
+	// Constructor -- Initializes default state, and configures ViewContext
+	// matrices to default
+	MyDrawing(GraphicsContext *gc);
 
-	// Destructor, frees state on the heap
+	// Destructor, frees image and view context
 	virtual ~MyDrawing();
 	
-	// we will override just these
+	// erases the previous drawing and draws a new one
 	virtual void paint(GraphicsContext *gc);
 	
 	// This will make sure to set dragging, and XOR mode
@@ -42,37 +44,21 @@ public:
 	virtual void mouseButtonUp(GraphicsContext *gc, unsigned int button, int x,
 			int y);
 	
-	// This will undraw previous hypotheticla shape that is drawn using
-	// the registered hypothetical line. (as a hypothetical box, with the shape
-	// contained within it). It will then draw the new hypothetical shape
+	// This will undraw previous hypothetical shape that is drawn using
+	// the registered hypothetical line. It will then draw the new hypothetical shape
+	// In case of polygon and triangle, this is done one segment at a time.
 	virtual void mouseMove(GraphicsContext *gc, int x, int y);
+	
+	// Handles continuously applying transformations
+	// exact steps are defined in the implementation file
+	// Commands are handled according to the KeyProtocol enum class
+	virtual void keyDown(GraphicsContext* gc, unsigned int keycode);
 	
 	// no need to account for how long a key is held down,
 	// but once a key is released, if an action is associated with it,
 	// it is handled in this method
-	// Commands:
-	// Segment Control Commands:
-	// Key: Z	Action: Advances to rubberband the next segment
-	// Drawing Mode Commands
-	// Key: l	Action: Switch to Line Drawing Mode
-	// Key: t	Action: Switch to Triangle Drawing Mode
-	// Key: r	Action: Switch to Rectangle Drawing Mode
-	// Key: c	Action: Switch to Circle Drawing Mode
-	// Key: p	Action: Switch to Polygon Drawing Mode
-	// Saving Commands
-	// Key: i	Action: Loads saved image (if any)
-	// Key: o	Action: Saves current image
-	// Coloring Commands
-	// Key: 0	Action: Set color to Black
-	// Key: 1	Action: Set color to Blue
-	// Key: 2	Action: Set color to Green
-	// Key: 3	Action: Set color to Red
-	// Key: 4	Action: Set color to Cyan
-	// Key: 5	Action: Set color to Magenta
-	// Key: 6	Action: Set color to Yellow
-	// Key: 7	Action: Set color to Gray
-	// Key: 8	Action: Set color to White
 	// @throws drawingException if a key is pressed while dragging
+	// Commands are handled according to the KeyProtocol enum class
 	virtual void keyUp(GraphicsContext* gc, unsigned int keycode);
 	
 private:
@@ -81,7 +67,7 @@ private:
 	// only one segment needs to be remembered
 	std::vector<int> x;
 	std::vector<int> y;
-	
+		
 	// The number of hypothetical segments drawn.
 	// With a triangle, there are two. Polygons? arbitrary
 	unsigned int numSegments;
@@ -89,10 +75,80 @@ private:
 	// flag to know if we are dragging
 	bool dragging;
 	
-	// an enum fo rthe different drawing modes
-	enum class DrawingMode{
+	// an enum for the different drawing modes
+	// Focus is the mode to specify origin of a transformation
+	enum class DrawingMode {
 		Line, Triangle, Rectangle,
-		Circle, Polygon,
+		Circle, Polygon, Focus
+	};
+	
+	// This defines all keys associated with all actions within this program
+	enum class KeyProtocol {
+		/* Transformation Commands */
+		// Reset image and all transformations
+		reset = '`',
+		// scale down transforms the model around a point
+		zoomout = '-',
+		// scale up transforms the model around a point
+		zoomin = '=',
+		// Rotates the model 1 step in the ccw direction
+		ccw = ',',
+		// Rotates the model 1 step in the cw direction
+		cw = '.',
+		// I had to put absolute values for the keys, but those really are
+		// just the normal up right down left keys! ^ > v <
+		// Translate the model +step in y
+		up = 65362,
+		// Translate the model -step in y
+		down = 65364,
+		// Translate the model +step in x
+		right = 65363,
+		// Translate the model -step in x
+		left = 65361,
+		
+		/* Segment Control Commands */
+		// Advances to rubberband the next segment. Only Polygon/Triangle modes
+		nextSeg = 'Z',
+		
+		/* Drawing Mode Commands */
+		// Switch to Line Drawing Mode
+		lineMode = 'l',
+		// Switch to Triangle Drawing Mode
+		triMode = 't',
+		// Switch to Rectangle Drawing Mode
+		rectMode = 'r',
+		// Switch to Circle Drawing Mode
+		circleMode = 'c',
+		// Switch to Polygon Drawing Mode
+		polyMode = 'p',
+		// Switch to focus mode: specifies tranformation origin for zoom/rotate
+		focusMode = 'f',
+		
+		/* Saving Commands */
+		// Loads saved image (if any)
+		load = 'i',
+		// Saves current image
+		save = 'o',
+		
+		/* Coloring Commands */
+		// Set color to Black
+		black = '1',
+		// Set color to Blue
+		blue = '2',
+		// Set color to Green
+		green = '3',
+		// Set color to Red
+		red = '4',
+		// Set color to Cyan
+		cyan = '5',
+		// Set color to Magenta
+		magenta = '6',
+		// Set color to Yellow
+		yellow = '7',
+		// Set color to Gray
+		gray = '8',
+		// Set color to White
+		white = '9',
 	};
 	
 	// The drawing mode to determine the hypothetical shape to be drawn
@@ -102,31 +158,34 @@ private:
 	// with the keyboard events
 	int color;
 	
-	// signal to be set when the user rubber bands the next segment TODO: needed?
+	// signal to be set when the user rubber bands the next segment
 	bool incrementSegments;
-	
-	
+		
 	// Image containing all drawn shapes
 	Image *image;
 	
-	// filename to save to/load from // TODO: how?
-//	static const char * const FILENAME = "Saved_Image.img";
+	// The viewcontext used to seperate the model from the device's view
+	ViewContext *vc;
+		
 	
-	
-	// Handles all drawing mode switching commands according to the 
-	// specifications in KeyUp()
+	// Handles all drawing mode switching 
 	// if the keycode doesn't match any expected keys, it simply returns
-	void handleModeCommands(GraphicsContext* gc, unsigned int keycode);
+	void handleModeCommands(GraphicsContext* gc, KeyProtocol key);
 	
-	// Handles all saving/loading commands according to the specifications
-	// in keyUp()
+	// Handles all saving/loading commands
 	// if the keycode doesn't match any expected keys, it simply returns
-	void handleFileCommands(GraphicsContext* gc, unsigned int keycode);
+	void handleFileCommands(GraphicsContext* gc, KeyProtocol key);
 	
-	// Handles all color changing commands according to the specifications
-	// in keyUp()
+	// Handles all color changing commands
 	// if the keycode doesn't match any expected keys, it simply returns
-	void handleColorCommands(GraphicsContext* gc, unsigned int keycode);
+	void handleColorCommands(KeyProtocol key);
+	
+	// Handles transformations. This manipulates the viewcontext
+	// Also redraws the image when called after handling the transformation
+	// this will also store the previous key to make sure that transformations
+	// are only configured once when necessary. This should speed this function
+	// considerably. 
+	void handleTransformCommands(GraphicsContext* gc, KeyProtocol key);
 	
 	// Helper method that handles checking the drawing mode,
 	// and drawing the appropriate shape while dragging.
@@ -137,7 +196,7 @@ private:
 	// TODO: except for polygon mode
 	void drawShape(GraphicsContext *gc, bool store);
 	
-	// Helper method that handles drawing a triangle within
+	// Helper method that handles drawing a line within
 	// a contained box defined by the hypothetical segment
 	// x0,y0 -> x1,y1
 	// It draws a line using the startpoint and endpoint
@@ -145,13 +204,6 @@ private:
 	// if store: the constructed shape will be added to the image
 	void drawLine(GraphicsContext * gc, bool store);
 	
-	// Helper method that handles drawing a triangle within
-	// a contained box defined by the hypothetical segment
-	// x0,y0 -> x1,y1
-	// It draws a triangle with the base of box's width
-	// and the height of the box's height
-	// if store: the constructed shape will be added to the image
-	void drawTriangle(GraphicsContext *gc, bool store);
 	
 	// Helper method that handles drawing a rectangle within
 	// a containex box defined by the hypothetical segment

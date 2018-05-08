@@ -3,46 +3,45 @@
 #include "matrix.h"
 #include "Image.h"
 #include <fstream>
-#include <iostream> // TODO: temporary?
+#include <iostream>
 
-// Constructor
-MyDrawing::MyDrawing() {
+// definitions for default constants
+#define ROT_STEP	10
+#define TRAN_STEP 20
+#define SCALE 2
+#define DEFAULT_COLOR GraphicsContext::CYAN
+
+MyDrawing::MyDrawing(GraphicsContext *gc) {
+	// create the view contexts
+	vc = new ViewContext(gc->getWindowHeight(), gc->getWindowWidth()); 
+	// config rotation, and scale
+	vc->configRotation(ROT_STEP);
+	vc->configZoom(SCALE);
+	
 	dragging = incrementSegments = false;
-	color = GraphicsContext::CYAN;
+	color = DEFAULT_COLOR;
 	numSegments = 1;
 	// Default mode will be line
 	drawingMode = MyDrawing::DrawingMode::Line;
 	// image to redraw everytime an exposure happens
 	image = new Image();
-	// vectors x and y will need at least 2 points
-	x.push_back(0); x.push_back(0);
-	y.push_back(0); y.push_back(0);
 	return;
 }
 
 MyDrawing::~MyDrawing() {
 	delete image;	
+	delete vc;
 }
 
-void MyDrawing::paint(GraphicsContext *gc) {
-	// TODO: what am i supposed to do here??
-	// for fun, let’s draw a "fixed" shape in the middle of the screen
-	// it will only show up after an exposure
-//	int middlex = gc->getWindowWidth() / 2;
-//	int middley = gc->getWindowHeight() / 2;
-//	gc->setColor(GraphicsContext::MAGENTA);
-//	for (int yi = middley - 50; yi <= middley + 50; yi++) {
-//		gc->drawLine(middlex - 50, yi, middlex + 50, yi);
-//	}
-	
+void MyDrawing::paint(GraphicsContext *gc) {	
+	gc->clear();
 	// redraw the image
 	gc->setColor(color);
-	image->draw(gc);
+	image->draw(gc, vc);
 	return;
 }
 
-void MyDrawing::mouseButtonDown(GraphicsContext * gc, unsigned int button,
-		int x, int y) {
+void MyDrawing::mouseButtonDown(GraphicsContext *gc, unsigned int button, int x, int y) {
 	// mouse button pushed down
 	// - clear context
 	// - set origin of new hypothetical line
@@ -50,7 +49,14 @@ void MyDrawing::mouseButtonDown(GraphicsContext * gc, unsigned int button,
 	// - draw shape in XOR mode.  Note, at this point, the hypothetical line is
 	//   degenerate (0 length), but need to do it for consistency
 	
+	// focus mode only reconfigures transformation matrices once captured
+	// on key up
+	if (drawingMode == MyDrawing::DrawingMode::Focus) {
+		return;
+	}
+	
 	// Originally, the hypothetical line(s) is/are degenerate
+	// Every shape has AT LEAST two points (one segment)
 	this->x.clear();
 	this->y.clear();
 	numSegments = 1;	
@@ -66,14 +72,21 @@ void MyDrawing::mouseButtonDown(GraphicsContext * gc, unsigned int button,
 	const bool store = true;
 	drawShape(gc, !store);
 
-	std::cout << "called mouse down" << std::endl;
+	// if we move while holding down this button, we're dragging
 	dragging = true;
 	return;
 }
 
-void MyDrawing::mouseButtonUp(GraphicsContext * gc, unsigned int button, int x,
-		int y) {
-	if (dragging) {
+void MyDrawing::mouseButtonUp(GraphicsContext *gc, unsigned int button, int x, int y) {
+	
+	// in case of focus, we reconfigure the scale and rotation matrices
+	if (drawingMode == MyDrawing::DrawingMode::Focus) {
+		matrix pts = vc->deviceToModel(x, y);
+		std::cout << "New Focus Point: x=" << pts[0][0] << " y=" << pts[1][0] <<  std::endl;
+		vc->configZoom(SCALE, pts[0][0], pts[1][0]);
+		vc->configRotation(ROT_STEP, pts[0][0], pts[1][0]);
+
+	} else if (dragging) {
 		// undraw old shape
 		const bool store = true;
 		drawShape(gc, !store);
@@ -92,28 +105,44 @@ void MyDrawing::mouseButtonUp(GraphicsContext * gc, unsigned int button, int x,
 	return;
 }
 
-void MyDrawing::mouseMove(GraphicsContext * gc, int x, int y) {
-	if (dragging) {
+void MyDrawing::mouseMove(GraphicsContext *gc, int x, int y) 
+{
+	if (dragging) 
+	{
 		// mouse moved - "undraw" old shape, then re-draw in new position
 		// will already be in XOR mode if dragging
 		// old shape undrawn
 		const bool store = true;
 		drawShape(gc, !store);
 		
-		// When releasing the increment segments key, this activates // TODO: debug?
-		if (incrementSegments) {
-			numSegments++;
-			std::cout << "numSegments: " << numSegments << std::endl;
-			this->x.push_back(this->x[numSegments-1]);
-			this->y.push_back(this->x[numSegments-1]);
+		// When releasing the increment segments key, we should rubberband a new
+		// segment.
+		if (incrementSegments) 
+		{
+			const bool inPolyMode = drawingMode == 
+					MyDrawing::DrawingMode::Polygon;
+			const bool inTriMode = drawingMode == 
+					MyDrawing::DrawingMode::Triangle;
+			// for a triangle, you can only have 3 segments
+			if (inPolyMode || (inTriMode && numSegments < 2)) 
+			{
+				numSegments++;
+			}
 			incrementSegments = false;
 		}
-
 		
-		// update
-		this->x[numSegments] = x;
-		this->y[numSegments] = y;
-
+		// update (numSegments = numPoints-1; ie. last point)
+		if (numSegments >= this->x.size())
+		{
+			this->x.push_back(x);
+			this->y.push_back(y);
+		}
+		else
+		{
+			this->x[numSegments] = x;
+			this->y[numSegments] = y;
+		}
+		
 		// new shape drawn
 		drawShape(gc, !store);
 		
@@ -121,53 +150,62 @@ void MyDrawing::mouseMove(GraphicsContext * gc, int x, int y) {
 	return;
 }
 
-
-void MyDrawing::keyUp(GraphicsContext* gc, unsigned int keycode)
+void MyDrawing::keyDown(GraphicsContext* gc, unsigned int keycode)
 {
-	if (dragging && drawingMode == MyDrawing::DrawingMode::Polygon 
+	// since transforming changes all device coordinates, the image is repainted
+	handleTransformCommands(gc, (KeyProtocol)keycode);
+}
+
+void MyDrawing::keyUp(GraphicsContext *gc, unsigned int keycode)
+{
+	// When pressing 'z', it advances the segment being rubber banded!
+	const bool inPolyMode = drawingMode == MyDrawing::DrawingMode::Polygon;
+	const bool inTriMode = drawingMode == MyDrawing::DrawingMode::Triangle;
+	if (dragging && (inPolyMode || inTriMode) 
 			&& (char)keycode == 'z') {
 		incrementSegments = true;
 	}
+	// Otherwise, you're not allowed to 
 	else if (dragging) {
-		throw drawingException("Cannot initiate an action while dragging (unless in polygon mode)");
+		throw drawingException("Cannot initiate an action "
+				"while dragging (Not in Polygon/Triangle Mode)");
 	}
-
-	std::cout << "keycode: '" << (char)keycode << "'" << std::endl;
 	
-	handleModeCommands(gc, keycode);
-	handleFileCommands(gc, keycode);
-	handleColorCommands(gc, keycode);
+	// pass-through functions will handle the keycode action if it's theirs
+	KeyProtocol key = (KeyProtocol)keycode;
+	handleModeCommands(gc, key);
+	handleFileCommands(gc, key);
+	handleColorCommands(key);
 }
 
 
-// Handles all drawing mode switching commands according to the 
-// specifications in KeyUp()
-// if the keycode doesn't match any expected keys, it simply returns
-void MyDrawing::handleModeCommands(GraphicsContext* gc, unsigned int keycode) {
-	switch ((char)keycode) {
-	case 'l':
+void MyDrawing::handleModeCommands(GraphicsContext *gc, KeyProtocol key) {
+	switch (key) {
+	case MyDrawing::KeyProtocol::lineMode:
 		drawingMode = MyDrawing::DrawingMode::Line;
 		break;
-	case 't':
+	case MyDrawing::KeyProtocol::triMode:
 		drawingMode = MyDrawing::DrawingMode::Triangle;
 		break;
-	case 'r':
+	case MyDrawing::KeyProtocol::rectMode:
 		drawingMode = MyDrawing::DrawingMode::Rectangle;
 		break;
-	case 'c':
+	case MyDrawing::KeyProtocol::circleMode:
 		drawingMode = MyDrawing::DrawingMode::Circle;
 		break;
-	case 'p':
+	case MyDrawing::KeyProtocol::polyMode:
 		drawingMode = MyDrawing::DrawingMode::Polygon;
 		break;
+	case MyDrawing::KeyProtocol::focusMode:
+		drawingMode = MyDrawing::DrawingMode::Focus;
 	default:
 		break;
 	}
 }
 
-void MyDrawing::handleFileCommands(GraphicsContext* gc, unsigned int keycode) {
-	switch ((char)keycode) {
-	case 'i': {
+void MyDrawing::handleFileCommands(GraphicsContext *gc, KeyProtocol key) {
+	switch (key) {
+	case MyDrawing::KeyProtocol::load: {
 		// input image from file!
 		std::cout << "Loading image from Saved_Image.img" << std::endl;
 		std::ifstream ifs("Saved_Image.img");
@@ -179,7 +217,7 @@ void MyDrawing::handleFileCommands(GraphicsContext* gc, unsigned int keycode) {
 		ifs.close();
 	}
 	break;
-	case 'o': {
+	case MyDrawing::KeyProtocol::save: {
 		// output image into file!
 		std::cout << "Saving image to Saved_Image.img" << std::endl;
 		std::ofstream ofs("Saved_Image.img");
@@ -192,25 +230,110 @@ void MyDrawing::handleFileCommands(GraphicsContext* gc, unsigned int keycode) {
 	}
 }
 
-void MyDrawing::handleColorCommands(GraphicsContext* gc, unsigned int keycode)
+void MyDrawing::handleColorCommands(KeyProtocol key)
 {
-	int colors[] = {GraphicsContext::BLACK, GraphicsContext::BLUE, GraphicsContext::GREEN,
-	GraphicsContext::RED, GraphicsContext::CYAN, GraphicsContext::MAGENTA,
-	GraphicsContext::YELLOW, GraphicsContext::GRAY, GraphicsContext::WHITE};
-	int colorIndex = keycode - '0';
-	if (colorIndex >= 0 && colorIndex < 9) {
-		color = colors[colorIndex];
+	switch(key) 
+	{
+	case MyDrawing::KeyProtocol::black:
+		color = GraphicsContext::BLACK;
+		break;
+	case MyDrawing::KeyProtocol::blue:
+		color = GraphicsContext::BLUE;
+		break;
+	case MyDrawing::KeyProtocol::green:
+		color = GraphicsContext::GREEN;
+		break;
+	case MyDrawing::KeyProtocol::red:
+		color = GraphicsContext::RED;
+		break;
+	case MyDrawing::KeyProtocol::cyan:
+		color = GraphicsContext::CYAN;
+		break;
+	case MyDrawing::KeyProtocol::magenta:
+		color = GraphicsContext::MAGENTA;
+		break;
+	case MyDrawing::KeyProtocol::yellow:
+		color = GraphicsContext::YELLOW;
+		break;
+	case MyDrawing::KeyProtocol::gray:
+		color = GraphicsContext::GRAY;
+		break;
+	case MyDrawing::KeyProtocol::white:
+		color = GraphicsContext::WHITE;
+		break;
+	default:
+		break;
 	}
 }
 
-void MyDrawing::drawShape(GraphicsContext * gc, bool store) {
+void MyDrawing::handleTransformCommands(GraphicsContext *gc, KeyProtocol key)
+{
+	// if default case executed, this becomes false
+	// so in all other cases, the image is redrawn
+	bool performedTransformation = true;
+	
+	// remembers the previous key so that it doesn't always reconfigure
+	// the translation matrix
+	static KeyProtocol prevKey = key;
+		
+	bool newKey = prevKey != key;
+
+	// update prevKey for next time
+	prevKey = key;
+		
+	switch (key) {
+	case MyDrawing::KeyProtocol::reset:
+		// reset all transformations
+		std::cout << "reset view and focus point to model origin" << std::endl;
+		vc->resetComposite();
+		vc->configRotation(ROT_STEP, 0, 0);
+		vc->configZoom(SCALE, 0, 0);
+		break;
+	case MyDrawing::KeyProtocol::up:
+		if (newKey) vc->configTranslation(0, TRAN_STEP, 0);
+		vc->translate();
+		break;
+	case MyDrawing::KeyProtocol::right:
+		if (newKey) vc->configTranslation(TRAN_STEP, 0, 0);
+		vc->translate();
+		break;
+	case MyDrawing::KeyProtocol::left:
+		if (newKey) vc->configTranslation(-TRAN_STEP, 0, 0);
+		vc->translate();
+		break;
+	case MyDrawing::KeyProtocol::down: 
+		if (newKey) vc->configTranslation(0,-TRAN_STEP,0);
+		vc->translate();
+		break;
+	case MyDrawing::KeyProtocol::zoomout:
+		vc->zoom(false);
+		break;
+	case MyDrawing::KeyProtocol::zoomin:
+		vc->zoom(true);
+		break;
+	case MyDrawing::KeyProtocol::ccw:
+		vc->rotate(true);
+		break;
+	case MyDrawing::KeyProtocol::cw:
+		vc->rotate(false);
+		break;
+	default:
+		performedTransformation = false;
+		break;
+	}
+
+	// redraw the image since the coords changed
+	if (performedTransformation)
+	{
+		paint(gc);
+	}
+	
+}
+
+void MyDrawing::drawShape(GraphicsContext *gc, bool store) {
 	switch (drawingMode) {
 		case MyDrawing::DrawingMode::Line: {
 			drawLine(gc, store);
-		}
-		break;
-		case MyDrawing::DrawingMode::Triangle: {
-			drawTriangle(gc, store);
 		}
 		break;
 		case MyDrawing::DrawingMode::Rectangle: {
@@ -221,112 +344,113 @@ void MyDrawing::drawShape(GraphicsContext * gc, bool store) {
 			drawCircle(gc, store);
 		}
 		break;
+		case MyDrawing::DrawingMode::Triangle:
 		case MyDrawing::DrawingMode::Polygon: {
 			drawPolygon(gc, store);
 		}
 		break;
+		case MyDrawing::DrawingMode::Focus: /// should never reach here
 		default:
 			throw drawingException("Invalid drawing mode specified");
 	}
 }
 
-void MyDrawing::drawLine(GraphicsContext * gc, bool store) {
+void MyDrawing::drawLine(GraphicsContext *gc, bool store) {
 	
 	// startpoint and endpoint
-	matrix m(3,3);
+	matrix m(4,3);	
 	m[0][0] = x[0];	m[0][1] = x[1];
 	m[1][0] = y[0];	m[1][1] = y[1];
 	m[2][0] = 0;	m[2][1] = 0;
+	m[3][0] = 1;	m[3][1] = 1;
 	
+	// convert to model coordinates
+	m = vc->deviceToModel(m);
+
 	// Draw the triangle
 	Line l(m, this->color);
-	l.draw(gc);
+	l.draw(gc, vc);
 	
 	if (store) {
 		image->add(&l);
 	}
 }
 
-
-void MyDrawing::drawTriangle(GraphicsContext * gc, bool store) {
-	// Define the triangle to be contained in the hypothetical box
-	int w = x[1] - x[0];
-	
-	// p1 would be on the lower left corner
-	// p2 in the upper middle
-	// p3 in the lower right corner
-	matrix m(3,3);
-	m[0][0] = x[0];	m[0][1] = x[0]+w/2;	m[0][2] = x[1];
-	m[1][0] = y[1];	m[1][1] = y[0];		m[1][2] = y[1];
-	m[2][0] = 0;	m[2][1] = 0;		m[2][2] = 0;
-	
-	// Draw the triangle
-	Triangle t(m, this->color);
-	t.draw(gc);
-	
-	if (store) {
-		image->add(&t);
-	}
-}
-
 void MyDrawing::drawRectangle(GraphicsContext *gc, bool store) {
 	// Define the rectangle to be the hypothetical box
-	int w = x[1] - x[0];
-	int h = y[1] - y[0];
+	double w = x[1] - x[0];
+	double h = y[1] - y[0];
 	
 	// Its origin will be halfway from p0 and p1
-	matrix m(3,1);
+	matrix m(4,1);
 	m[0][0] = x[0] + w/2;
 	m[1][0] = y[0] + h/2;
 	m[2][0] = 0;
+	m[3][0] = 1;
+	
+	// recompute w,h
+	matrix p0 = vc->deviceToModel(x[0],y[0],0);
+	matrix p1 = vc->deviceToModel(x[1],y[1],0);
+	w = p1[0][0] - p0[0][0];
+	h = p1[1][0] - p0[1][0];
+	
+	// convert to model coordinates
+	m = vc->deviceToModel(m);
 	
 	// Draw the rectangle
 	Rectangle r(m, w, h, color);
-	r.draw(gc);
+	r.draw(gc, vc);
 	
 	if (store) {
 		image->add(&r);
 	}
 }
 
-void MyDrawing::drawCircle(GraphicsContext * gc, bool store) {
+void MyDrawing::drawCircle(GraphicsContext *gc, bool store) {
 	// width/height of the hypothetical box formed by the segment
 	int w = x[1] - x[0];
 	int h = y[1] - y[0];
 	
 	// Its origin will be halfway from p0 and p1
 	// column two is a point on the circle; (r,0,0)
-	matrix m(3,2);
+	matrix m(4,2);
 	m[0][0] = x[0] + w/2;	m[0][1] = x[1];
 	m[1][0] = y[0] + h/2; 	m[1][1] = y[1];
 	m[2][0] = 0;			m[2][1] = 0;
+	m[3][0] = 1;			m[3][1] = 1;
+	
+	// Convert to model coordinates
+	m = vc->deviceToModel(m);
 	
 	// Draw the circle
 	Circle c(m, color);
-	c.draw(gc);
+	c.draw(gc, vc);
 	
 	if (store) {
 		image->add(&c);
 	}
 }
 
-void MyDrawing::drawPolygon(GraphicsContext * gc, bool store) {
+void MyDrawing::drawPolygon(GraphicsContext *gc, bool store) {
 	
 	// connect all the vertices in vect x, y together!
-	matrix m(3,numSegments+1);
+	matrix m(4,numSegments+1);
 	for (unsigned int c=0; c<numSegments+1; c++) {
 		m[0][c] = x[c];
 		m[1][c] = y[c];
 		m[2][c] = 0;
+		m[3][c] = 1.0;
 	}
 	
-	std::cout << m << std::endl;
+	// Convert to model coordinates
+	m = vc->deviceToModel(m);
+	
 	
 	// Try to draw a polygon, if possible...
 	try {
 		// Draw the Polygon
 		Polygon p(numSegments+1, m, color);
-		p.draw(gc);
+		p.draw(gc, vc);
 		if (store) {
 			image->add(&p);
 		}
