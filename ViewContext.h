@@ -112,13 +112,18 @@ public:
 private:	
 	
 	// internal function that computes a translation matrix
+	// @params (dx,dy,dz) amounts of translation in all components
 	matrix computeTranslation(double dx, double dy, double dz=0);
 	
 	// internal function that computes a rotation matrix
-	// x,y,z represent the center of rotation, and angle is in radians
+	// @params (x,y,z) represent the center of rotation
+	// @param angle angle of rotation in radians
 	matrix computeRotation(double angle, double x=0, double y=0, double z=0);
 	
 	// internal function that computes a scale matrix
+	// @param multiplier the amount to scale. must be non-zero positive
+	// @params (x,y,z) center of zooming
+	// @throws viewContextException if multiplier is non-positive
 	matrix computeZoom(double multiplier, double x=0, double y=0, double z=0);
 	
 	// composite matrix used to transform a point
@@ -161,11 +166,15 @@ private:
 	// the total amount of translation to be applied to the composite matrix
 	double netTranslation;
 
-	// represents the amount of rotation applied in radians to the composite
-	double netRotation;	
+	// represents the total amount of rotation applied to the composite matrix
+	// stored as a matrix instead of a double because of the possiblity
+	// of rotating around a focus point
+	matrix netRotation;	
 
 	// represents the net amount of zooming applied to the composite matrix
-	double netZoom;
+	// stored as a matrix instead of a double because of the possibility
+	// of zooming into a focus point
+	matrix netZoom;
 	
 	// The height of the model, repersenting the maximum y coordinate in it
 	const double modelHeight;

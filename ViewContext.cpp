@@ -8,7 +8,7 @@
 ViewContext::ViewContext(double modelHeight, double modelWidth)
 	: composite(4,4), compositeInv(4,4), translation(4,4), translationInv(4,4),
 	  rotation(4,4), rotationInv(4,4), scale(4,4), scaleInv(4,4),
-	  netTranslation(0), netRotation(0), netZoom(0),
+	  netTranslation(0), netRotation(4,4), netZoom(4,4),
 	  modelHeight(modelHeight), modelWidth(modelWidth)
 {
 	configTranslation(0, 0, 0);
@@ -122,10 +122,10 @@ void ViewContext::resetComposite()
 	translationInv = prevTranslationInv;	
 }
 	
-matrix ViewContext::computeTranslation(double dx, double dy, double dz=0)
+matrix ViewContext::computeTranslation(double dx, double dy, double dz)
 {
 	// reset translation and translationInv to identity
-	tranMatrix = matrix::identity(4);
+	matrix tranMatrix = matrix::identity(4);
 	
 	// Set the translation matrix
 	tranMatrix[0][3] = dx;
@@ -135,141 +135,70 @@ matrix ViewContext::computeTranslation(double dx, double dy, double dz=0)
 	return tranMatrix;
 }
 
-matrix ViewContext::computeRotation(double angle, double x=0, double y=0, double z=0)
+matrix ViewContext::computeRotation(double angle, double x, double y, double z)
 {
 	// convert degrees to radians
 	angle = angle/180 * M_PI;
-	
-	// reset rotation and rotationInv to identity
-	matrix rotation = matrix::identity(4);
-	
-	
+		
 	// Translate to origin
-	matrix translation = computeTranslation(-x, -y, -z);	
-	rotation = translation * rotation;
+	matrix rotation = computeTranslation(-x, -y, -z);
 	
 	// composite the rotation matrix
-	matrix rot = matrix::identity(4);
-	matrix rotInv = matrix::identity(4);
+	matrix tempRot = matrix::identity(4);
 	
-	rot[0][0] = std::cos(angle);
-	rot[0][1] = -std::sin(angle);
-	rot[1][0] = std::sin(angle);
-	rot[1][1] = std::cos(angle);
+	tempRot[0][0] = std::cos(angle);
+	tempRot[0][1] = -std::sin(angle);
+	tempRot[1][0] = std::sin(angle);
+	tempRot[1][1] = std::cos(angle);
 	
-	rotation = rot * rotation;
+	rotation = tempRot * rotation;
 	
-	// Translate back to the point
-	translation = computeTranslation(x, y, z);
-	rotation = translation * rotation;
+	// Translate back to the center point
+	rotation = computeTranslation(x, y, z) * rotation;
 
 	return rotation;
 }
 
-matrix ViewContext::computeZoom(double multiplier, double x=0, double y=0, double z=0);
-
-
-void ViewContext::configTranslation(double dx, double dy, double dz)
-{
-	// reset translation and translationInv to identity
-	translation = matrix::identity(4);
-	translationInv = matrix::identity(4);
-	
-	// Set the translation matrix
-	translation[0][3] = dx;
-	translation[1][3] = dy;
-	translation[2][3] = dz;
-	
-	// Set the inverse translation matrix
-	translationInv[0][3] = -dx;
-	translationInv[1][3] = -dy;
-	translationInv[2][3] = -dz;
-}
-	
-void ViewContext::configRotation(double angle, double x, double y, double z)
-{
-	// convert degrees to radians
-	angle = angle/180 * M_PI;
-	
-	// reset rotation and rotationInv to identity
-	rotation = matrix::identity(4);
-	rotationInv = matrix::identity(4);
-	
-	// Remember Translation state in case a translation is needed
-	matrix prevTranslation = translation;
-	matrix prevTranslationInv = translationInv;
-	
-	// Translate to origin
-	configTranslation(-x, -y, -z);
-	rotation = translation * rotation;
-	rotationInv = rotationInv * translationInv;
-	
-	// composite the rotation matrix
-	matrix rot = matrix::identity(4);
-	matrix rotInv = matrix::identity(4);
-	
-	rot[0][0] = std::cos(angle);
-	rot[0][1] = -std::sin(angle);
-	rot[1][0] = std::sin(angle);
-	rot[1][1] = std::cos(angle);
-	
-	rotation = rot * rotation;
-	
-	// composite the rotationInv matrix
-	rotInv[0][0] = std::cos(-angle);
-	rotInv[0][1] = -std::sin(-angle);
-	rotInv[1][0] = std::sin(-angle);
-	rotInv[1][1] = std::cos(-angle);
-
-	rotationInv = rotationInv * rotInv;
-	
-	// Translate back to the point		
-	rotation = translationInv * rotation;
-	rotationInv = rotationInv * translation;
-		
-	// revert translation to its previous state
-	translation = prevTranslation;
-	translationInv = prevTranslationInv;
-
-}
-	
-void ViewContext::configZoom(double multiplier, double x, double y, double z)
+matrix ViewContext::computeZoom(double multiplier, double x, double y, double z)
 {
 	// if the multiplier is non-positive, throw an exception
 	if (multiplier <= 0)
 	{
 		throw viewContextException("scale multiplier be a positive double");
 	}
-	
-	// reset scale and scaleInv matrices to identity
-	scale = matrix::identity(4);
-	scaleInv = matrix::identity(4);
-	
-	// Remember Translation state in case a translation is needed
-	matrix prevTranslation = translation;
-	matrix prevTranslationInv = translationInv;	
-	
+			
 	// Translate to origin
-	configTranslation(-x, -y, -z);
-	scale = translation;
-	scaleInv = translationInv;
+	matrix scale = computeTranslation(-x,-y,-z);
 	
 	// composite into the scale matrix the actual scaling
 	matrix scaleMatrix = matrix::identity(4);
-	matrix scaleMatrixInv = matrix::identity(4);
 	for (int i=0; i<3; i++)
 	{
 		scaleMatrix[i][i] *= multiplier;
-		scaleMatrixInv[i][i] *= 1/multiplier;
 	}
 	scale = scaleMatrix * scale;
-	scaleInv = scaleInv * scaleMatrixInv;
 	
 	// Translate back to the point's center	
-	scale = translationInv * scale;
-	scaleInv = scaleInv * translation;
+	scale = computeTranslation(x,y,z) * scale;
 	
-	// revert translation to its previous state
-	translation = prevTranslation;
-	translationInv = prevTranslationInv;
+	return scale;
+}
+
+
+void ViewContext::configTranslation(double dx, double dy, double dz)
+{
+	translation = computeTranslation(dx, dy, dz);
+	translationInv = computeTranslation(-dx, -dy, -dz);	
+}
+	
+void ViewContext::configRotation(double angle, double x, double y, double z)
+{
+	rotation = computeRotation(angle, x, y, z);
+	rotationInv = computeRotation(-angle, x, y, z);
+}
+	
+void ViewContext::configZoom(double multiplier, double x, double y, double z)
+{
+	scale = computeZoom(multiplier, x, y, z);
+	scaleInv = computeZoom(1/multiplier, x, y, z);
 }
