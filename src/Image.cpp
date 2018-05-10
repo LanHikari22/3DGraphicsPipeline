@@ -159,6 +159,27 @@ std::istream& Image::in(std::istream &is)
 	return is;
 }
 
+void Image::parseStl(const std::string &stlPath) throw(imageException)
+{
+	std::ifstream stlFile(stlPath.c_str());
+
+	// Analyze all facets within the file to create summary
+	while (stlFile){
+		// if at a valid facet start, it gets parsed
+		Triangle* facet = parseFacet(stlFile);
+		if (facet)
+		{
+			// valid facet parsed is not NULL!
+			add(facet);
+			delete facet;
+		}
+	}
+
+	// The file has been analyzed completely. Thank you for your service, input file stream!
+	stlFile.close();
+
+}
+
 void Image::erase()
 {
 	// TODO: test
@@ -170,6 +191,60 @@ void Image::erase()
 		delete *it;
 	}
 	shapes.clear();
+}
+
+
+Triangle* Image::parseFacet(std::ifstream & stlFile) const throw(imageException) {
+	std::string s1, s2, line;
+	matrix v(3,3);
+	
+	getline(stlFile, line);
+	// Ensure we're at the start of a valid facet before parsing data
+	// once confirmed to be a facet, we throw exceptions if parsing fails
+	if(not isFacetStart(line))
+		return NULL;
+	
+	// confirm "outer loop"
+	stlFile >> s1 >> s2;
+	if (s1.compare("outer") != 0 or s2.compare("loop") != 0) 
+		throw imageException("Encountered facet with no outer loop");
+	
+	// parse "vertex <double> <double> <double>" 3 times
+	for(int i = 0; i<3; i++){
+		stlFile >> s1;
+		if (s1.compare("vertex") != 0) 
+			throw imageException("failed while parsing facet vertices");
+		stlFile >> v[i][0] >> v[i][1] >> v[i][2];
+	}
+	// confirm "endloop"
+	stlFile >> s1;
+	if (s1.compare("endloop") != 0) 
+		throw imageException("Encountered facet with no endloop");
+	// confirm "endfacet"
+	stlFile >> s1;
+	if (s1.compare("endfacet") != 0) 
+		throw imageException("Encountered faced with no endfacet");
+	
+	// remove '\n' after having obtained "endfacet" for the getline next iteration
+	stlFile.ignore(10, '\n');
+	
+	// we have the vertices, create the triangle		
+	return new Triangle(v);
+}
+
+bool Image::isFacetStart(const std::string &line) const {
+	bool output = false;
+	std::string s1, s2;
+	
+	std::stringstream ss(line);
+	// TODO: is this safe? what if the line is just "beep\0" ? Will it attempt to read invalid memory?
+	ss >> s1 >> s2;
+	// first word must be 'facet', second word must be "normal"
+	if (s1.compare("facet") == 0 and s2.compare("normal") == 0){
+		output = true;
+	}
+	
+	return output;
 }
 
 std::ostream& operator<<(std::ostream &os, const Image &o)

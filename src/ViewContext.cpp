@@ -7,14 +7,12 @@
 
 ViewContext::ViewContext(double modelHeight, double modelWidth)
 	: composite(4,4), compositeInv(4,4), translation(4,4), translationInv(4,4),
-	  rotation(4,4), rotationInv(4,4), scale(4,4), scaleInv(4,4),
-	  netTranslation(0), netRotation(4,4), netZoom(4,4),
+	  rotation(4,4), rotationInv(4,4), 
+	  scale(4,4), scaleInv(4,4), netTranslation(4,4), netTranslationInv(4,4),
+	  netRotation(4,4), netRotationInv(4,4), netScale(4,4), netScaleInv(4,4),
 	  modelHeight(modelHeight), modelWidth(modelWidth)
 {
-	configTranslation(0, 0, 0);
-	configRotation(0);
-	configZoom(1);
-	resetComposite();
+	reset();
 }
 		
 matrix ViewContext::modelToDevice(double x, double y, double z) const 
@@ -56,12 +54,29 @@ matrix ViewContext::deviceToModel(const matrix& points) const
 {
 	return compositeInv * points;
 }
+
+void ViewContext::reset()
+{
+	// reset all accumulations
+	netTranslation = netTranslationInv = netRotation = netRotationInv
+			= netScale = netScaleInv = matrix::identity(4);
+	// reset rotate(), translate(), and zoom() to have no effect
+	configTranslation(0, 0, 0);
+	configRotation(0);
+	configZoom(1);
 	
+	// reset the composite matrix so that it transforms from model to
+	// device, with no other transformations
+	resetComposite();
+}
+
 void ViewContext::translate()
 {
 	// translate in the model coordinates
-	composite = composite * translation;
-	compositeInv = translationInv * compositeInv;
+	netTranslation = netTranslation * translation;
+	netTranslationInv = translationInv * netTranslationInv;
+	
+	updateComposite();
 }
 	
 void ViewContext::rotate(bool cw)
@@ -69,57 +84,53 @@ void ViewContext::rotate(bool cw)
 	// rotate in the model coordinates
 	if (cw)
 	{
-		composite = composite * rotation;
-		compositeInv = rotationInv * compositeInv;
+		netRotation = netRotation * rotation;
+		netRotationInv = rotationInv * netRotationInv;
 	} else
 	{
-		composite = composite * rotationInv;
-		compositeInv = rotation * compositeInv;
+		netRotation = netRotation * rotationInv;
+		netRotationInv = rotation * netRotationInv;
 	}
+	
+	updateComposite();
 }
 
 void ViewContext::zoom(bool in) 
-{
-	// scale in the model coordinates
+{	
+	// accumulate to netZoom
 	if (in) 
 	{
-		composite = composite * scale;
-		compositeInv = scaleInv * compositeInv;
+		netScale = netScale * scale;
+		netScaleInv = scaleInv * netScaleInv;
 	} else {
-		composite = composite * scaleInv;
-		compositeInv = scale * compositeInv;
+		netScale = netScale * scaleInv;
+		netScaleInv = scale * netScaleInv;
 	}
+	
+	updateComposite();
 }
 
 void ViewContext::updateComposite()
 {
-	// apply translation, then rotation, then zoom
-	
+	resetComposite();
+	// apply zoom, rotation, than translation
+	composite = composite * netTranslation * netRotation * netScale;
+	compositeInv = netScaleInv * netRotationInv * 
+			netTranslationInv * compositeInv;
 }
-
 
 void ViewContext::resetComposite()
 {	
-	// initialize composite and compositeInv to identity
-	composite = matrix::identity(4);
-	compositeInv = matrix::identity(4);
-	
-	// remember previous transformatio matrices to revert back
-	matrix prevTranslation = translation;
-	matrix prevTranslationInv = translationInv;
-	
 	// reflect y
 	matrix reflectY = matrix::identity(4);
 	reflectY[1][1] = -1;
-	composite = composite * reflectY;
-	compositeInv = reflectY * compositeInv;
+	composite = reflectY;
+	compositeInv = reflectY;
 	
 	// image is inverted, and above the screen, translate down and right
-
-	configTranslation(modelWidth/2, -modelHeight/2, 0);
-	translate();
-	translation = prevTranslation;
-	translationInv = prevTranslationInv;	
+	// DEVICE [reflectY][translate] MODEL (translate right-mults reflectY)
+	composite = computeTranslation(modelWidth/2, modelHeight/2, 0) * composite;
+	compositeInv = compositeInv * computeTranslation(-modelWidth/2, -modelHeight/2, 0);
 }
 	
 matrix ViewContext::computeTranslation(double dx, double dy, double dz)

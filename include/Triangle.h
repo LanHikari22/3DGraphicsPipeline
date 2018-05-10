@@ -13,9 +13,10 @@ public:
 	
 	// A Triangle contains three vertices.
 	// @param pts 3x3 matrix consisting of 3 column vectors of [x y z]'
-	// @param color RGB representation of the color of the shape, each color is a byte.	
+	// @param color RGB representation of the color of the shape, each color is a byte.
+	//		  the color is by default not presented in STL files, so it has a default.
 	// @throws matrixException if the matrix is not 3x3 (or bigger)
-	Triangle(const matrix &pts, int color);
+	Triangle(const matrix &pts, int color=GraphicsContext::CYAN);
 	
 	// Copy constructor for the Triangle class
 	// It builds on top of the copy constructor of the shape class

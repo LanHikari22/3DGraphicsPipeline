@@ -31,6 +31,13 @@ public:
 	// @param modelWidth width dimension of the model to get total dimensions
 	ViewContext(double modelHeight, double modelWidth);
 		
+	// Complete reset! Return to init state
+	// Resets all configured transformeations, and registered accumulation 
+	// of zooming/scaling and translating
+	// composite matrix simply translates from model coordinates to device
+	// without any additional transformations
+	void reset();
+	
 	// Computes a  point as it would appear on the device, given its value
 	// in the model.
 	// @param x	the x component of the model point
@@ -139,17 +146,16 @@ private:
 	// This must be recomputed whenever the composite matrix is recomputed
 	matrix compositeInv;
 	
-	// A translation matrix that pans the image in the x or y direction
-	// the matrix is left multiplied with the composite matrix when
-	// the image is panned
+	// the translation matrix. When the image is translated, this is applied
+	// to the netTranslation matrix
 	matrix translation;
 	
-	// inverse of the translation matrix. Used for computing the overall
-	// inverse composite matrix
+	// the inverse translation matrix. Used to compute the inverse
+	// netTranslation matrix
 	matrix translationInv;
 	
 	// The rotation matrix. When the image on the screen is rotated,
-	// the composite matrix is transformed by it
+	// the netRotation matrix is transformed by it
 	matrix rotation;
 	
 	// inverse of the rotation matrix. Used for computing the overall
@@ -164,17 +170,29 @@ private:
 	matrix scaleInv;
 	
 	// the total amount of translation to be applied to the composite matrix
-	double netTranslation;
+	matrix netTranslation;
 
+	// the inverse of the netTranslation matrix to compute the inevrse
+	// composite matrix
+	matrix netTranslationInv;
+	
 	// represents the total amount of rotation applied to the composite matrix
 	// stored as a matrix instead of a double because of the possiblity
 	// of rotating around a focus point
 	matrix netRotation;	
+	
+	// the inverse of the netRotation matrix needed in order to compute
+	// the inverse composite matrix
+	matrix netRotationInv;
 
 	// represents the net amount of zooming applied to the composite matrix
 	// stored as a matrix instead of a double because of the possibility
 	// of zooming into a focus point
-	matrix netZoom;
+	matrix netScale;
+	
+	// the inverse of the netZoom matrix needed to compute the inverse
+	// composite matrix
+	matrix netScaleInv;
 	
 	// The height of the model, repersenting the maximum y coordinate in it
 	const double modelHeight;
@@ -182,7 +200,6 @@ private:
 	// the width of the model
 	const double modelWidth;
 
-		
 };
 
 #endif

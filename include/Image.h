@@ -13,14 +13,23 @@
 #include "Polygon.h"
 #include "x11context.h"
 #include <vector>
+#include <string> // for parseStl, taking string ref param for path
+#include <sstream>
+#include <fstream> // for parsting STL files
+
+// a helper class to bundle a message with any thrown exceptions.
+// To use, simply 'throw imageException("A descriptive message about
+// the problem")'.  This will throw the exception object by value.
+// Recommendation is to catch by reference (to prevent slicing).
+class imageException:public std::runtime_error
+{
+	public:
+		imageException(std::string message):
+		      std::runtime_error((std::string("Image Exception: ") + 
+		               message).c_str()) {}
+};
 
 class Image {
-	// container for shape pointers: anything that extends Shape can be here
-	std::vector<Shape*> shapes;
-	// Additional amount of space padding to insert to each shape. Helps printing good 
-	// output
-	unsigned int spaceLevel;
-
 public:
 	// no-argument constructor. Creates an empty Image with no shapes in it
 	Image();
@@ -57,12 +66,38 @@ public:
 	std::ostream& out(std::ostream &os) const;
 	
 	// Reads a set of shapes from istream
-	std::istream& in(std::istream &is);
+	std::istream& in(std::istream &is);	
+	
+	// Parses triangles out of an stl file and adds them into the image
+	// @param stlFile this should only contain triangle facets
+	// @throws imageException in case of parsing failure
+	void parseStl(const std::string &stlPath) throw(imageException);
 	
 	// removes all shapes from memory, and deallocates dynamic objects in the Image
 	// this destructor logic can be used in the destructor, but also the assignment 
 	// operator
 	void erase();
+private:
+	// parses one facet out of the input file stream and creates 
+	// a triangle out of it! (yes facets happen to be triangles) 
+	// Always parses at least one line, or a whole facet
+	// @param stlFile the stl file to parse
+	// @returns a triangle pointer to a heap object representing the facet
+	//		    NULL if the first line parsed doesn't start with "facet normal"
+	// @throws imageException in case of parsing failure
+	Triangle* parseFacet(std::ifstream &stlFile) const throw(imageException);
+
+	// check for the start of a facet... It must start with "facet normal"
+	// @return whether the line really is the start of a facet
+	bool isFacetStart(const std::string &line) const;
+
+	
+	// container for shape pointers: anything that extends Shape can be here
+	std::vector<Shape*> shapes;
+	// Additional amount of space padding to insert to each shape. Helps printing good 
+	// output
+	unsigned int spaceLevel;
+	
 };
 
 // global overloading of the stream insertion operator for the class

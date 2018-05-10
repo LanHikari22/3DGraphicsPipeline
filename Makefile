@@ -1,23 +1,22 @@
 CC=g++
-CFLAGS= -g -c -Wall
+CFLAGS= -g -c -Wall -I include
 LDFLAGS= -lX11
-SOURCES=main.cpp gcontext.cpp x11context.cpp mydrawing.cpp Shape.cpp Point.cpp  \
-Line.cpp Triangle.cpp Circle.cpp Rectangle.cpp Polygon.cpp Image.cpp matrix.cpp \
-ViewContext.cpp
-OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=view
+SOURCES= $(wildcard src/*.cpp)
+OBJECTS= $(SOURCES:.cpp=.o)
+EXEC= orbit
 
-all: $(SOURCES) $(EXECUTABLE) 
+all: $(SOURCES) $(EXEC) 
 
 # pull in dependency info for *existing* .o files
 -include $(OBJECTS:.o=.d)
 
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+$(EXEC): $(OBJECTS)
 
-.cpp.o: 
-	$(CC) $(CFLAGS) $< -o $@
-	$(CC) -MM $(CFLAGS) $< > $*.d
+	$(CC) $(notdir $(OBJECTS)) $(LDFLAGS) -o $@
+
+.cpp.o:
+	$(CC) $(CFLAGS) $< -o $(notdir $@)
+	$(CC) -MM $(CFLAGS) $< > $(notdir $*.d)
 
 clean:
-	rm -rf $(OBJECTS) $(EXECUTABLE) *.d
+	rm -rf $(notdir $(OBJECTS)) $(EXEC) *.d

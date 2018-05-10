@@ -166,26 +166,19 @@ private:
 	
 	// The viewcontext used to seperate the model from the device's view
 	ViewContext *vc;
-		
-	
-	// Handles all drawing mode switching 
+			
+	// Handles image-changing commands. involves drawing, saving/loading images
+	// Handles draw mode switching, saving/loading, and color changing commands
 	// if the keycode doesn't match any expected keys, it simply returns
-	void handleModeCommands(GraphicsContext* gc, KeyProtocol key);
+	void handleImageCommands(GraphicsContext *gc, KeyProtocol key);
 	
-	// Handles all saving/loading commands
-	// if the keycode doesn't match any expected keys, it simply returns
-	void handleFileCommands(GraphicsContext* gc, KeyProtocol key);
-	
-	// Handles all color changing commands
-	// if the keycode doesn't match any expected keys, it simply returns
-	void handleColorCommands(KeyProtocol key);
-	
-	// Handles transformations. This manipulates the viewcontext
+	// Handles actions that concern the view of the image, not the image
+	// itself Handles transformations. This manipulates the viewcontext
 	// Also redraws the image when called after handling the transformation
 	// this will also store the previous key to make sure that transformations
 	// are only configured once when necessary. This should speed this function
 	// considerably. 
-	void handleTransformCommands(GraphicsContext* gc, KeyProtocol key);
+	void handleViewCommands(GraphicsContext *gc, KeyProtocol key);
 	
 	// Helper method that handles checking the drawing mode,
 	// and drawing the appropriate shape while dragging.
