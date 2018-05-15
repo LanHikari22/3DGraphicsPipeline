@@ -77,18 +77,7 @@ Rectangle& Rectangle::operator=(const Rectangle& rhs)
 }
 
 void Rectangle::draw(GraphicsContext *gc, ViewContext *vc) const
-{
-	// Make sure all z components is zero. 3D is not supported yet...
-	bool zeroZ = true;
-	for (int c=0; c<4; c++)
-	{
-		zeroZ &= pts[2][c] == 0;
-	}
-	if (not zeroZ)
-	{
-		throw shapeException("3D Drawing Not implemented yet");
-	}
-	
+{	
 	// set the color to the shape's
 	gc->setColor(this->color);
 	

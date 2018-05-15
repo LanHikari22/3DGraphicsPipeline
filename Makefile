@@ -2,7 +2,7 @@ CC=g++
 CFLAGS= -g -c -Wall -I include
 LDFLAGS= -lX11
 SOURCES= $(wildcard src/*.cpp)
-OBJECTS= $(SOURCES:.cpp=.o)
+OBJECTS= $(SOURCES:.cpp=.o) # TODO: change. always makes...
 EXEC= orbit
 
 all: $(SOURCES) $(EXEC) 

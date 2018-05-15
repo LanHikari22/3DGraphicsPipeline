@@ -71,6 +71,7 @@ public:
 	// @throws matrixException if numPoints is incorrect or points rows < 4
 	matrix deviceToModel(const matrix& points) const;
 	
+	
 	// Translates the view by the configured transformation matrix
 	// This Transforms the composite matrix and recomputes its inverse
 	void translate();
@@ -118,6 +119,29 @@ public:
 	
 private:	
 	
+	// Internal configuration of model to view
+	// computes matrices for conversion  from x,y,z to L,M,N
+	// viewing coordinates. This changes as the viewing point 
+	// changes via orbit
+	// this updates the ModelToView and ViewToModel matrices
+	// @params (p0x, p0y, p0z) coords of view point
+	void config_vTm(double p0x, double p0y, double p0z);
+	
+	// Internal configuration of view to view plane
+	// determines the projection matrix based on the focal point location
+	// in the z coordinate of the view coordinate, zf
+	// copmutes and updates the view to view plane matrix
+	// matrices
+	// @param zf focal point distance from p0. Must be positive: behind view plane
+	// @throws viewContextException if zf <= 0
+	void config_pTv(const double zf);
+		
+	// Computes the mapping from the view plane coordinates to the
+	// device coordinates. This involves the same rules for the 2D composite
+	// transformations, in addition to normalizing the 4th component,
+	// and scaling and transforming so that the view plane is fully visible
+	void config_dTp();
+	
 	// internal function that computes a translation matrix
 	// @params (dx,dy,dz) amounts of translation in all components
 	matrix computeTranslation(double dx, double dy, double dz=0);
@@ -135,71 +159,42 @@ private:
 	
 	// composite matrix used to transform a point
 	// from model coordinates to device coordinates
-	// initially set to transform from center origin, y up
-	// to center upperleft corner, y down.
-	matrix composite;
+	// its inverse is also needed for the inverse (in case of 2D)
+	matrix composite, compositeInv;
 	
-	// inverse of the composite matrix. Used to transform a point
-	// from device coordinates to model coordinates
-	// initially set to transform from center upperleft corner, y down
-	// to center origin, y up
-	// This must be recomputed whenever the composite matrix is recomputed
-	matrix compositeInv;
+	// matrices for forming the complete 3D composite matrix!
+	// in order to go from model to device, we have to traverse
+	// the view (camera) coordinates, the view plane, and then the device!
+	matrix vTm, pTv, dTp;
 	
-	// the translation matrix. When the image is translated, this is applied
-	// to the netTranslation matrix
-	matrix translation;
-	
-	// the inverse translation matrix. Used to compute the inverse
-	// netTranslation matrix
-	matrix translationInv;
-	
-	// The rotation matrix. When the image on the screen is rotated,
-	// the netRotation matrix is transformed by it
-	matrix rotation;
-	
-	// inverse of the rotation matrix. Used for computing the overall
-	// inverse composite matrix
-	matrix rotationInv;
-	
-	// Scale matrix. Zooms into or out of an image by scaling the view up.
-	matrix scale;
-	
-	// inverse of the scale matrix. Used for computing the overall
-	// inverse composite matrix
-	matrix scaleInv;
+	// the translation matrix and its inverse. 
+	// When the image is translated, they are applied
+	// to the netTranslation matrix and its inverse
+	matrix translation, translationInv;
+		
+	// The rotation matrix and its inverse. 
+	// When the image on the screen is rotated,
+	// the netRotation matrix and its inverse are transformed by it
+	matrix rotation, rotationInv;
+		
+	// Scale matrix and its inverse. For zooming into or out of an image 
+	matrix scale, scaleInv;
 	
 	// the total amount of translation to be applied to the composite matrix
-	matrix netTranslation;
-
-	// the inverse of the netTranslation matrix to compute the inevrse
-	// composite matrix
-	matrix netTranslationInv;
+	matrix netTranslation, netTranslationInv;
 	
 	// represents the total amount of rotation applied to the composite matrix
 	// stored as a matrix instead of a double because of the possiblity
 	// of rotating around a focus point
-	matrix netRotation;	
+	matrix netRotation, netRotationInv;	
 	
-	// the inverse of the netRotation matrix needed in order to compute
-	// the inverse composite matrix
-	matrix netRotationInv;
-
 	// represents the net amount of zooming applied to the composite matrix
 	// stored as a matrix instead of a double because of the possibility
 	// of zooming into a focus point
-	matrix netScale;
-	
-	// the inverse of the netZoom matrix needed to compute the inverse
-	// composite matrix
-	matrix netScaleInv;
-	
-	// The height of the model, repersenting the maximum y coordinate in it
-	const double modelHeight;
-	
-	// the width of the model
-	const double modelWidth;
-
+	matrix netScale, netScaleInv;
+		
+	// dimensions of the device, repersenting the maximum x,y coordinates in it
+	const double deviceWidth, deviceHeight;
 };
 
 #endif

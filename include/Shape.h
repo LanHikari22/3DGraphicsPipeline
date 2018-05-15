@@ -72,10 +72,8 @@ public:
 	// Never call the Shape's operator=, That makes no sense!
 	Shape& operator=(const Shape& rhs) = delete;
 	
-	// For now, this can only handle drawing in 2D.
 	// a concrete class defines the exact mechanisms of drawing this
-	// It should throw a shapeException if the z component is non-zero while trying 
-	// to draw. The ViewContext pointer is used to convert from model to
+	// The ViewContext pointer is used to convert from model to
 	// device coordinates.
 	virtual void draw(GraphicsContext *gc, ViewContext *vc) const = 0;
 	

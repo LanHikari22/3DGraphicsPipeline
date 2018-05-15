@@ -163,7 +163,7 @@ void Image::parseStl(const std::string &stlPath) throw(imageException)
 {
 	std::ifstream stlFile(stlPath.c_str());
 
-	// Analyze all facets within the file to create summary
+	// parse all facets within the file to create summary
 	while (stlFile){
 		// if at a valid facet start, it gets parsed
 		Triangle* facet = parseFacet(stlFile);
@@ -175,15 +175,15 @@ void Image::parseStl(const std::string &stlPath) throw(imageException)
 		}
 	}
 
-	// The file has been analyzed completely. Thank you for your service, input file stream!
+	// The file was parsed completely. Thank you for your service!
+	std::cout << "Parsed content:" << std::endl;
+	std::cout << *this << std::endl;
 	stlFile.close();
 
 }
 
 void Image::erase()
-{
-	// TODO: test
-	
+{	
 	// Loop through all shapes! delete shapes and remove from container!
 	std::vector<Shape*>::iterator it;
 	for (it = shapes.begin(); it != shapes.end(); it++)
@@ -214,7 +214,7 @@ Triangle* Image::parseFacet(std::ifstream & stlFile) const throw(imageException)
 		stlFile >> s1;
 		if (s1.compare("vertex") != 0) 
 			throw imageException("failed while parsing facet vertices");
-		stlFile >> v[i][0] >> v[i][1] >> v[i][2];
+		stlFile >> v[0][i] >> v[1][i] >> v[2][i];
 	}
 	// confirm "endloop"
 	stlFile >> s1;

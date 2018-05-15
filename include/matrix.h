@@ -94,7 +94,7 @@ class matrix
 		~matrix();
  
 		// Assignment operator - make this just like rhs.  Must function
-	        // correctly even if rhs is a different size than this.
+	    // correctly even if rhs is a different size than this.
 		matrix& operator=(const matrix& rhs);
  
 		// "Named" constructor(s).  This is not a language mechanism, rather
@@ -114,6 +114,12 @@ class matrix
 		// throw (matrixException)
 		//
 		static matrix identity(unsigned int size);
+
+		// getter in order to know the number of rows in the matrix
+		int getRows() const;
+		
+		// getter in order to know the number of columns in th matrix
+		int getCols() const;
 		
  
  

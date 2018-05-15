@@ -83,17 +83,6 @@ Polygon& Polygon::operator=(const Polygon& rhs)
 
 void Polygon::draw(GraphicsContext *gc, ViewContext *vc) const
 {
-	// Make sure all z components is zero. 3D is not supported yet...
-	bool zeroZ = true;
-	for (unsigned int c=0; c<numColumns; c++)
-	{
-		zeroZ &= pts[2][c] == 0;
-	}
-	if (not zeroZ)
-	{
-		throw shapeException("3D Drawing Not implemented yet");
-	}
-
 	// polygon needs to at least be a triangle!
 	if (numColumns < 3)
 	{

@@ -64,8 +64,6 @@ public:
 	// This sets the GraphicsContext color to the shape's color 
 	// and draws the Polygon by drawing n segments using the GraphicsContext pointer
 	// and ViewContext pointer
-	// @throws shapeException if any z-component is non-zero. 
-	// 3D Drawing not supported yet
 	// @throws shapeException if numColumns < 3. 
 	// A (non-degenerate) polygon needs to AT LEAST be a triangle
 	virtual void draw(GraphicsContext *gc, ViewContext *vc) const;

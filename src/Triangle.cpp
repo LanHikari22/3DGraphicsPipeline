@@ -40,13 +40,7 @@ Triangle& Triangle::operator=(const Triangle& rhs)
 }
 
 void Triangle::draw(GraphicsContext *gc, ViewContext *vc) const
-{
-	// Make sure all z components is zero. 3D is not supported yet...
-	if (pts[2][0] != 0 || pts[2][1] != 0 || pts[2][2] != 0)
-	{
-		throw shapeException("3D Drawing Not implemented yet");
-	}
-	
+{	
 	// set the color to the shape's
 	gc->setColor(this->color);
 	

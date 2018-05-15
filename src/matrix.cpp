@@ -83,6 +83,15 @@ matrix matrix::identity(unsigned int size)
 	return m;
 }
 
+int matrix::getRows() const
+{
+	return rows;
+}
+
+int matrix::getCols() const
+{
+	return cols;
+}
 
 // Binary operations
 matrix matrix::operator+(const matrix& rhs) const
@@ -143,8 +152,6 @@ matrix matrix::operator*(const matrix& rhs) const
 matrix matrix::operator*(const double scale) const
 {
 	matrix retVal(*this);
-	cout << "this: " << this->rows << ' ' << this->cols << endl;
-	cout << "retVal: " << retVal.rows << ' ' << retVal.cols << endl;
 
 	for (unsigned int r=0; r<this->rows; r++)
 	{

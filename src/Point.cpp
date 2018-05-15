@@ -27,13 +27,7 @@ Point& Point::operator=(const Point& rhs)
 }
 
 void Point::draw(GraphicsContext *gc, ViewContext *vc) const
-{
-	// Make sure the z component is zero. 3D is not supported yet...
-	if (pts[2][0] != 0)
-	{
-		throw shapeException("3D Drawing Not implemented yet");
-	}
-	
+{	
 	// Set the color and draw the device converted point
 	gc->setColor(this->color);
 	matrix devPts = vc->modelToDevice(this->pts);

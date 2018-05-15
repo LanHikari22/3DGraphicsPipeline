@@ -1,0 +1,15 @@
+  facet normal 0.000000e+000 -0.000000e+000 -1.000000e+000
+    outer loop
+      vertex   -1.639220e+001 5.832537e+001 0.000000e+000
+      vertex   -1.601121e+000 10.326684e+001 0.000000e+000
+      vertex   -1.632681e+001 15.847761e+001 0.000000e+000
+    endloop
+  endfacet
+
+  facet normal 0 0 0
+    outer loop
+      vertex  0     0    0
+      vertex  0     1   0
+      vertex  1   0     0
+    endloop
+  endfacet
